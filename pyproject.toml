@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "generic-delta-canard-fighter-6dof"
+version = "0.1.0"
+description = "Educational 6DOF dynamics and control simulator for a generic delta-canard fighter aircraft."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Hunkar Suci" }
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pydantic"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
