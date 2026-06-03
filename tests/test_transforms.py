@@ -8,10 +8,8 @@ import numpy as np
 import pytest
 
 from generic_delta_canard_fighter_6dof.transforms import (
-    body_to_nav_dcm,
     body_to_ned_dcm,
     is_rotation_matrix,
-    nav_to_body_dcm,
     ned_to_body_dcm,
 )
 
@@ -39,15 +37,6 @@ def test_ned_to_body_is_transpose_inverse() -> None:
     assert np.allclose(C_bn, C_nb.T)
     assert np.allclose(C_nb @ C_bn, np.eye(3))
     assert np.allclose(C_bn @ C_nb, np.eye(3))
-
-
-def test_alias_functions_match_primary_functions() -> None:
-    phi = 0.1
-    theta = 0.2
-    psi = 0.3
-
-    assert np.allclose(body_to_nav_dcm(phi, theta, psi), body_to_ned_dcm(phi, theta, psi))
-    assert np.allclose(nav_to_body_dcm(phi, theta, psi), ned_to_body_dcm(phi, theta, psi))
 
 
 def test_yaw_90_degrees_body_forward_points_east() -> None:
