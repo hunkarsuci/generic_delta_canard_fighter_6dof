@@ -1,16 +1,17 @@
 """
 Coordinate transformation utilities.
 
-This module handles rotations between the aircraft body frame and the navigation frame
+This module handles rotations between the aircraft body-fixed frame and the
+local North-East-Down frame.
 
-Frame convention used in this project: 
+Frame convention:
 
 Body frame:
-    x_b = forward
+    x_b = forward through the aircraft nose
     y_b = right wing
-    z_b = down
+    z_b = downward
 
-Navigation frame:
+NED frame:
     x_N = north
     y_E = east
     z_D = down
@@ -20,6 +21,10 @@ Euler angle convention:
     theta = pitch angle [rad]
     psi   = yaw angle   [rad]
 
+The matrix body_to_ned_dcm(phi, theta, psi) transforms a vector from body axes
+to NED axes:
+
+    v_ned = C_nb @ v_body
 """
 
 from __future__ import annotations
@@ -32,6 +37,7 @@ def body_to_ned_dcm(phi: float, theta: float, psi: float) -> np.ndarray:
     Return the direction cosine matrix from body frame to NED frame.
 
     Parameters
+    ----------
     phi:
         Roll angle [rad].
     theta:
@@ -40,16 +46,14 @@ def body_to_ned_dcm(phi: float, theta: float, psi: float) -> np.ndarray:
         Yaw / heading angle [rad].
 
     Returns
+    -------
     np.ndarray
         3x3 direction cosine matrix C_nb.
 
     Notes
-    The returned matrix transforms body-frame vectors into NED-frame vectors:
-
-        v_ned = C_nb @ v_body
-
+    -----
     This uses the standard aerospace 3-2-1 Euler sequence:
-        yaw, then pitch, then roll.
+    yaw, pitch, roll.
     """
     c_phi = np.cos(phi)
     s_phi = np.sin(phi)
@@ -81,32 +85,16 @@ def body_to_ned_dcm(phi: float, theta: float, psi: float) -> np.ndarray:
         dtype=float,
     )
 
+
 def ned_to_body_dcm(phi: float, theta: float, psi: float) -> np.ndarray:
     """
     Return the direction cosine matrix from NED frame to body frame.
 
-    Since rotation matrices are orthonormal, the inverse is the transpose:
+    Since direction cosine matrices are orthonormal:
 
         C_bn = C_nb.T
     """
     return body_to_ned_dcm(phi, theta, psi).T
-
-
-def body_to_nav_dcm(phi: float, theta: float, psi: float) -> np.ndarray:
-    """
-    Alias for body_to_ned_dcm.
-
-    The project uses NED as the navigation frame internally.
-    This alias keeps the name intuitive for higher-level code.
-    """
-    return body_to_ned_dcm(phi, theta, psi)
-
-
-def nav_to_body_dcm(phi: float, theta: float, psi: float) -> np.ndarray:
-    """
-    Alias for ned_to_body_dcm.
-    """
-    return ned_to_body_dcm(phi, theta, psi)
 
 
 def is_rotation_matrix(matrix: np.ndarray, tolerance: float = 1.0e-9) -> bool:
@@ -117,18 +105,6 @@ def is_rotation_matrix(matrix: np.ndarray, tolerance: float = 1.0e-9) -> bool:
 
         R @ R.T = I
         det(R) = +1
-
-    Parameters
-    ----------
-    matrix:
-        Matrix to check.
-    tolerance:
-        Numerical tolerance for the checks.
-
-    Returns
-    -------
-    bool
-        True if the matrix is approximately a valid rotation matrix.
     """
     matrix = np.asarray(matrix)
 
