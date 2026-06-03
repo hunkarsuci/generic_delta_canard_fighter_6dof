@@ -1,0 +1,175 @@
+"""
+Tests for aircraft kinematics functions.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from generic_delta_canard_fighter_6dof.kinematics import (
+    altitude_rate_from_down_velocity,
+    body_to_wind_angles,
+    body_velocity_to_ned_velocity,
+    euler_rates,
+    wind_to_body_velocity,
+)
+
+
+def test_euler_rates_at_zero_attitude() -> None:
+    rates = euler_rates(
+        phi=0.0,
+        theta=0.0,
+        p=0.1,
+        q=0.2,
+        r=0.3,
+    )
+
+    expected = np.array([0.1, 0.2, 0.3])
+
+    assert np.allclose(rates, expected)
+
+
+def test_euler_rates_with_roll_angle() -> None:
+    phi = np.deg2rad(30.0)
+    theta = 0.0
+    p = 0.1
+    q = 0.2
+    r = 0.3
+
+    rates = euler_rates(phi=phi, theta=theta, p=p, q=q, r=r)
+
+    expected_phi_dot = p
+    expected_theta_dot = q * np.cos(phi) - r * np.sin(phi)
+    expected_psi_dot = q * np.sin(phi) + r * np.cos(phi)
+
+    expected = np.array(
+        [
+            expected_phi_dot,
+            expected_theta_dot,
+            expected_psi_dot,
+        ]
+    )
+
+    assert np.allclose(rates, expected)
+
+
+def test_euler_rates_rejects_singularity() -> None:
+    with pytest.raises(ValueError):
+        euler_rates(
+            phi=0.0,
+            theta=np.pi / 2.0,
+            p=0.0,
+            q=0.0,
+            r=0.0,
+        )
+
+
+def test_wind_to_body_velocity_zero_angles() -> None:
+    velocity_body = wind_to_body_velocity(VT=100.0, alpha=0.0, beta=0.0)
+
+    expected = np.array([100.0, 0.0, 0.0])
+
+    assert np.allclose(velocity_body, expected)
+
+
+def test_wind_to_body_velocity_positive_alpha() -> None:
+    VT = 100.0
+    alpha = np.deg2rad(10.0)
+    beta = 0.0
+
+    velocity_body = wind_to_body_velocity(VT=VT, alpha=alpha, beta=beta)
+
+    expected = np.array(
+        [
+            VT * np.cos(alpha),
+            0.0,
+            VT * np.sin(alpha),
+        ]
+    )
+
+    assert np.allclose(velocity_body, expected)
+
+
+def test_wind_to_body_velocity_positive_beta() -> None:
+    VT = 100.0
+    alpha = 0.0
+    beta = np.deg2rad(5.0)
+
+    velocity_body = wind_to_body_velocity(VT=VT, alpha=alpha, beta=beta)
+
+    expected = np.array(
+        [
+            VT * np.cos(beta),
+            VT * np.sin(beta),
+            0.0,
+        ]
+    )
+
+    assert np.allclose(velocity_body, expected)
+
+
+def test_wind_to_body_velocity_rejects_negative_speed() -> None:
+    with pytest.raises(ValueError):
+        wind_to_body_velocity(VT=-1.0, alpha=0.0, beta=0.0)
+
+
+def test_body_to_wind_angles_round_trip() -> None:
+    VT_original = 150.0
+    alpha_original = np.deg2rad(7.0)
+    beta_original = np.deg2rad(-3.0)
+
+    u, v, w = wind_to_body_velocity(
+        VT=VT_original,
+        alpha=alpha_original,
+        beta=beta_original,
+    )
+
+    VT, alpha, beta = body_to_wind_angles(u, v, w)
+
+    assert VT == pytest.approx(VT_original)
+    assert alpha == pytest.approx(alpha_original)
+    assert beta == pytest.approx(beta_original)
+
+
+def test_body_to_wind_angles_zero_speed() -> None:
+    VT, alpha, beta = body_to_wind_angles(0.0, 0.0, 0.0)
+
+    assert VT == pytest.approx(0.0)
+    assert alpha == pytest.approx(0.0)
+    assert beta == pytest.approx(0.0)
+
+
+def test_body_velocity_to_ned_velocity_level_flight() -> None:
+    velocity_ned = body_velocity_to_ned_velocity(
+        u=100.0,
+        v=0.0,
+        w=0.0,
+        phi=0.0,
+        theta=0.0,
+        psi=0.0,
+    )
+
+    expected = np.array([100.0, 0.0, 0.0])
+
+    assert np.allclose(velocity_ned, expected)
+
+
+def test_body_velocity_to_ned_velocity_heading_east() -> None:
+    velocity_ned = body_velocity_to_ned_velocity(
+        u=100.0,
+        v=0.0,
+        w=0.0,
+        phi=0.0,
+        theta=0.0,
+        psi=np.pi / 2.0,
+    )
+
+    expected = np.array([0.0, 100.0, 0.0])
+
+    assert np.allclose(velocity_ned, expected, atol=1.0e-12)
+
+
+def test_altitude_rate_from_down_velocity() -> None:
+    assert altitude_rate_from_down_velocity(10.0) == pytest.approx(-10.0)
+    assert altitude_rate_from_down_velocity(-5.0) == pytest.approx(5.0)
