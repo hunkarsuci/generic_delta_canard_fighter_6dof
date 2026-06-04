@@ -14,19 +14,19 @@ This repository is being developed phase by phase.
 
 Current progress:
 
-- [x] Phase 0 — Project skeleton
-- [x] Phase 1 — Constants, units, state vector, and control vector
-- [x] Phase 2 — Body frame, NED frame, kinematics, and quaternion utilities
-- [x] Phase 3 — ISA atmosphere model, Mach number, and dynamic pressure
-- [ ] Phase 4 — Aircraft geometry and mass properties
-- [ ] Phase 5 — Nonlinear 6DOF equations
-- [ ] Phase 6 — Aerodynamic model
-- [ ] Phase 7 — Propulsion and actuators
-- [ ] Phase 8 — Trim
-- [ ] Phase 9 — Linearization
-- [ ] Phase 10 — PID control
-- [ ] Phase 11 — LQR control
-- [ ] Phase 12 — Real-time simulation engineering
+- [x] Phase 0 - Project skeleton
+- [x] Phase 1 - Constants, units, state vector, and control vector
+- [x] Phase 2 - Body frame, NED frame, kinematics, and quaternion utilities
+- [x] Phase 3 - ISA atmosphere model, Mach number, and dynamic pressure
+- [ ] Phase 4 - Aircraft geometry and mass properties
+- [ ] Phase 5 - Nonlinear 6DOF equations
+- [ ] Phase 6 - Aerodynamic model
+- [ ] Phase 7 - Propulsion and actuators
+- [ ] Phase 8 - Trim
+- [ ] Phase 9 - Linearization
+- [ ] Phase 10 - PID control
+- [ ] Phase 11 - LQR control
+- [ ] Phase 12 - Real-time simulation engineering
 
 Development started in June 2026 and the repository is updated gradually.
 
