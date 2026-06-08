@@ -124,6 +124,7 @@ def make_control(
 
     return u
 
+# we add here validation to check state numbers and airspeed has to be non-negative.
 
 def validate_state(x: np.ndarray) -> None:
     """
