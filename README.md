@@ -19,7 +19,7 @@ Current progress:
 - [x] Phase 2 - Body frame, NED frame, kinematics, and quaternion utilities
 - [x] Phase 3 - ISA atmosphere model, Mach number, and dynamic pressure
 - [x] Phase 4 - Aircraft geometry and mass properties
-- [ ] Phase 5 - Nonlinear 6DOF equations
+- [x] Phase 5 - Nonlinear 6DOF equations
 - [ ] Phase 6 - Aerodynamic model
 - [ ] Phase 7 - Propulsion and actuators
 - [ ] Phase 8 - Trim
