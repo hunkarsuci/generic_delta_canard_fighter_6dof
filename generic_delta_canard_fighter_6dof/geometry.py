@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np 
 
-@dataclass(froze=True)
+@dataclass(frozen=True)
 class AircraftGeometry:
     """
     Aircraft geometry and mass properties.
