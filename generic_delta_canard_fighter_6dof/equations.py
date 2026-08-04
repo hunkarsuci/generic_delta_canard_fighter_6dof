@@ -407,6 +407,156 @@ def aircraft_dynamics(
     return x_dot
 
 
+def aircraft_dynamics_quat(
+    t: float,
+    x_quat: np.ndarray,
+    control: np.ndarray,
+    geometry: AircraftGeometry,
+    force_moment_model: ForceMomentModel = zero_forces_moments,
+) -> np.ndarray:
+    """Compute the nonlinear 6DOF state derivative in quaternion form.
+
+    Uses a 13-state quaternion formulation:
+
+        x_quat = [u, v, w, p, q, r, q0, q1, q2, q3, x_N, y_E, h]
+
+    This formulation has no Euler-angle singularity and is suitable for
+    aggressive-maneuver simulation.
+
+    Parameters
+    ----------
+    t:
+        Current simulation time [s].
+    x_quat:
+        13-state quaternion aircraft state vector.
+    control:
+        5-element aircraft control vector.
+    geometry:
+        Aircraft geometry and mass properties.
+    force_moment_model:
+        Function returning non-gravitational body forces and moments.
+
+    Returns
+    -------
+    np.ndarray
+        State derivative x_quat_dot with shape (13,).
+
+    Notes
+    -----
+    Shares the same force/moment models as ``aircraft_dynamics``.
+    Aerodynamics and propulsion require wind-axis quantities (VT, alpha, beta)
+    which are computed from body u, v, w via the kinematics module.
+
+    Gravity is always added inside this function.
+
+    Quaternion normalization is the caller's responsibility (typically
+    done after each integration step, not inside the derivative).
+    """
+    from generic_delta_canard_fighter_6dof.kinematics import (
+        body_to_wind_angles,
+    )
+    from generic_delta_canard_fighter_6dof.quat_state import (
+        NUM_QUAT_STATES,
+        QuatStateIndex,
+        _validate_quat_state,
+    )
+    from generic_delta_canard_fighter_6dof.quaternions import (
+        quaternion_multiply,
+        quaternion_to_dcm,
+    )
+
+    _validate_quat_state(x_quat)
+    validate_control(control)
+
+    u = float(x_quat[QuatStateIndex.U])
+    v = float(x_quat[QuatStateIndex.V])
+    w = float(x_quat[QuatStateIndex.W])
+
+    p = float(x_quat[QuatStateIndex.P])
+    q = float(x_quat[QuatStateIndex.Q])
+    r = float(x_quat[QuatStateIndex.R])
+
+    q_vec = x_quat[QuatStateIndex.Q0 : QuatStateIndex.Q3 + 1].copy()
+
+    velocity_body = np.array([u, v, w], dtype=float)
+    angular_rates = np.array([p, q, r], dtype=float)
+
+    # -- wind-axis quantities for aero/propulsion models --
+    VT, alpha, beta = body_to_wind_angles(u, v, w)
+
+    # Build an Euler-style state for the force/moment model interface.
+    # The model interface expects the 12-state Euler vector.
+    from generic_delta_canard_fighter_6dof.state import NUM_STATES as _NS
+
+    x_euler = np.zeros(_NS, dtype=float)
+    from generic_delta_canard_fighter_6dof.state import StateIndex
+
+    x_euler[StateIndex.VT] = VT
+    x_euler[StateIndex.ALPHA] = alpha
+    x_euler[StateIndex.BETA] = beta
+    x_euler[StateIndex.P] = p
+    x_euler[StateIndex.Q] = q
+    x_euler[StateIndex.R] = r
+    # phi/theta/psi left at 0 (not used by aero/prop, only by gravity)
+    x_euler[StateIndex.X_N] = float(x_quat[QuatStateIndex.X_N])
+    x_euler[StateIndex.Y_E] = float(x_quat[QuatStateIndex.Y_E])
+    x_euler[StateIndex.H] = float(x_quat[QuatStateIndex.H])
+
+    non_gravity = force_moment_model(t, x_euler, control, geometry)
+
+    # -- gravity in body frame using quaternion DCM --
+    gravity_ned_N = np.array([0.0, 0.0, geometry.mass_kg * GRAVITY_MPS2], dtype=float)
+    C_nb = quaternion_to_dcm(q_vec)
+    C_bn = C_nb.T
+    gravity_body = C_bn @ gravity_ned_N
+
+    total_force_body = non_gravity.force_body_N + gravity_body
+    total_moment_body = non_gravity.moment_body_Nm
+
+    # -- translational acceleration (body frame) --
+    body_acceleration = translational_acceleration_body(
+        velocity_body_mps=velocity_body,
+        angular_rates_radps=angular_rates,
+        total_force_body_N=total_force_body,
+        mass_kg=geometry.mass_kg,
+    )
+
+    # -- rotational acceleration --
+    angular_acceleration = rotational_acceleration_body(
+        angular_rates_radps=angular_rates,
+        total_moment_body_Nm=total_moment_body,
+        geometry=geometry,
+    )
+
+    # -- quaternion kinematics (no pre-normalization -- caller normalizes post-step) --
+    omega_quat = np.array([0.0, p, q, r], dtype=float)
+    q_dot = 0.5 * quaternion_multiply(q_vec, omega_quat)
+
+    # -- NED velocity from body velocity --
+    velocity_ned = C_nb @ velocity_body
+
+    x_dot = np.zeros(NUM_QUAT_STATES, dtype=float)
+
+    x_dot[QuatStateIndex.U] = body_acceleration[0]
+    x_dot[QuatStateIndex.V] = body_acceleration[1]
+    x_dot[QuatStateIndex.W] = body_acceleration[2]
+
+    x_dot[QuatStateIndex.P] = angular_acceleration[0]
+    x_dot[QuatStateIndex.Q] = angular_acceleration[1]
+    x_dot[QuatStateIndex.R] = angular_acceleration[2]
+
+    x_dot[QuatStateIndex.Q0] = q_dot[0]
+    x_dot[QuatStateIndex.Q1] = q_dot[1]
+    x_dot[QuatStateIndex.Q2] = q_dot[2]
+    x_dot[QuatStateIndex.Q3] = q_dot[3]
+
+    x_dot[QuatStateIndex.X_N] = velocity_ned[0]
+    x_dot[QuatStateIndex.Y_E] = velocity_ned[1]
+    x_dot[QuatStateIndex.H] = altitude_rate_from_down_velocity(velocity_ned[2])
+
+    return x_dot
+
+
 def _as_vector3(vector: np.ndarray, name: str) -> np.ndarray:
     """
     Convert input to a finite 3-element vector.

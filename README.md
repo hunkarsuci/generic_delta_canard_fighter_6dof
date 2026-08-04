@@ -9,26 +9,31 @@ aircraft parameters are generic, configurable placeholders.
 
 ## Implementation status
 
-| Capability | Status |
-|---|---|
-| State/control vectors (12-state, 5-control) | ✓ Implemented |
-| Body/NED frame transformations (3-2-1 Euler) | ✓ Validated |
-| Quaternion utilities (Hamilton algebra) | ✓ Implemented |
-| Wind ⇄ body velocity conversion | ✓ Validated |
-| ISA atmosphere (0–20 km) | ✓ Validated |
-| Aircraft geometry and mass properties | ✓ Implemented |
-| Nonlinear 6DOF equations of motion | ✓ Validated |
-| Euler and RK4 integrators | ✓ Verified (4th-order convergence) |
-| Generic aerodynamic model | ✓ Implemented (placeholder coefficients) |
-| Generic propulsion model | ✓ Implemented (placeholder parameters) |
-| Straight-and-level trim | ✓ Validated (residuals < 1e-6 × weight) |
-| Numerical linearization | ✓ Validated (nonlinear vs linear < 20% over 0.5 s) |
-| Stability/modal analysis | ✓ Implemented |
-| Deterministic evaluation CLI | ✓ Implemented |
-| CI (lint, format, test, coverage, eval) | ✓ Configured |
-| Actuator dynamics | Not implemented |
-| PID/LQR control | Not implemented |
-| Real-time simulation | Not implemented |
+| Capability | Implementation | Verification level | Evidence | Limitation |
+|---|---|---|---|---|
+| State/control vectors | Complete | Unit verified | Shape, finiteness, range tests | 12-state Euler; 13-state quat also available |
+| Body/NED transforms (3-2-1) | Complete | Numerically verified | Orthonormality, det=+1, geometric 90° checks | Euler singularity at θ=±90° |
+| Quaternion utilities | Complete | Numerically verified | Euler↔quat↔DCM round-trips, double-cover | Scalar-first Hamilton convention |
+| Wind ⇄ body conversion | Complete | Unit verified | Round-trip and sign-consistency tests | VT→0 singularity returns (0,0,0) |
+| ISA atmosphere (0–20 km) | Complete | Numerically verified | Sea-level and tropopause vs ISO 2533:1975 | Sampled points only; geometric altitude used |
+| Geometry and mass properties | Complete | Unit verified | Inertia PD check, defaults, validation | CG offsets stored but unused |
+| Nonlinear 6DOF EoM | Complete | Numerically verified | Newton's 2nd law, Coriolis, kinematic invariants | β→±90° guarded; gravity hard-wired |
+| Euler and RK4 integrators | Complete | Numerically verified | 4th-order convergence via step-halving | Fixed-step only |
+| Generic aerodynamic model | Complete | Unit and numerical verified | Dimensional, symmetry, sign, bounds tests | **Synthetic placeholder coefficients** — no wind-tunnel or flight-data validation |
+| Generic propulsion model | Complete | Unit and numerical verified | Throttle, thrust-axis tests (indirect) | **Synthetic parameters** — no engine-deck validation |
+| Straight-and-level trim | Complete | Model-level validated | Residual < 1e-6·weight, reproducibility, multi-point grid | Valid for generic placeholder model only; not a flight envelope |
+| Numerical linearization | Complete | Numerically verified | Nonlinear vs linear agreement over short horizon, perturbation sensitivity | Euler-angle coordinates; not valid near θ=±90° |
+| Stability/modal analysis | Complete | Unit verified | Stable/unstable/oscillatory on synthetic systems | Does not label modes or pair complex conjugates |
+| 13-state quaternion dynamics | Complete | Numerically verified | Norm preservation, analytic rates, 90° yaw, pitch-90° passage, Euler/quat agreement | Same placeholder aero model |
+| Actuator dynamics | Complete | Unit verified | Step response, position/rate saturation, reset | Synthetic default time constants and limits |
+| Control allocation | Complete | Unit verified | Symmetric/differential mixing, feasibility, determinism | Fixed linear mapping; not optimal allocation |
+| PID stabilization | Complete | Closed-loop model validated | Zero-error, integral, anti-windup, derivative filter, reset | Assumes simulated state availability; synthetic gains |
+| LQR stabilization | Complete | Closed-loop model validated | Riccati residual, stable CL eigenvalues at trim, Bryson scaling | Valid near design operating point |
+| Trim-feasibility map | Complete | Model-level validated | Grid sweep, convergence rate, residual bounds | Computational map; not a flight envelope |
+| Soft real-time runner | Complete | Software timing verified | Fake-clock, overrun detection, step-count, reset | Soft real-time; not a hard real-time system |
+| PID vs LQR comparison CLI | Complete | Implemented | `examples/compare_controllers.py` | Single perturbation scenario |
+
+All aerodynamic coefficients and propulsion parameters are **generic placeholders** and are **not physically validated** against any real aircraft data.
 
 ## Reproducible result
 

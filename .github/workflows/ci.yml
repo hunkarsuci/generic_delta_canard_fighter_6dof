@@ -40,3 +40,15 @@ jobs:
 
       - name: Deterministic evaluation
         run: python examples/evaluate_6dof.py --state-only
+
+      - name: Trim baseline
+        run: python -c "from generic_delta_canard_fighter_6dof.trim import trim_straight_level; r = trim_straight_level(5000, 200); assert r.converged, f'Trim failed: {r.message}'; print(f'alpha={r.alpha_deg:.3f}deg, throttle={r.throttle:.4f}')"
+
+      - name: Linearization baseline
+        run: python -c "from generic_delta_canard_fighter_6dof.trim import trim_straight_level; from generic_delta_canard_fighter_6dof.linearization import linearize; from generic_delta_canard_fighter_6dof.propulsion import combined_forces_moments; from generic_delta_canard_fighter_6dof.geometry import create_default_geometry; r = trim_straight_level(5000, 200); assert r.converged; lin = linearize(r.state, r.control, create_default_geometry(), combined_forces_moments()); assert lin.A.shape == (12, 12); print('Linearization OK')"
+
+      - name: PID controller baseline
+        run: python -c "from generic_delta_canard_fighter_6dof.control import AircraftPID; from generic_delta_canard_fighter_6dof.state import make_state; import numpy as np; pid = AircraftPID(); out = pid.step(make_state(VT=200), np.array([0,0,0,200]), 0.01); assert out.shape == (4,); print('PID OK')"
+
+      - name: LQR controller baseline
+        run: python -c "from generic_delta_canard_fighter_6dof.trim import trim_straight_level; from generic_delta_canard_fighter_6dof.linearization import linearize; from generic_delta_canard_fighter_6dof.control import compute_lqr; from generic_delta_canard_fighter_6dof.propulsion import combined_forces_moments; from generic_delta_canard_fighter_6dof.geometry import create_default_geometry; r = trim_straight_level(5000, 200); assert r.converged; lin = linearize(r.state, r.control, create_default_geometry(), combined_forces_moments()); lqr = compute_lqr(lin.A, lin.B); assert lqr.stabilizable; print(f'LQR OK, K shape={lqr.K.shape}')"
