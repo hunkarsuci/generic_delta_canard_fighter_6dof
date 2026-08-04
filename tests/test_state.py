@@ -1,14 +1,16 @@
 """
 Tests for state and control vector definitions
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from generic_delta_canard_fighter_6dof.state import (
-    ControlIndex,
     NUM_CONTROLS,
     NUM_STATES,
+    ControlIndex,
     StateIndex,
     control_to_dict,
     make_control,
@@ -18,7 +20,8 @@ from generic_delta_canard_fighter_6dof.state import (
     validate_state,
 )
 
-# Every test function starts with test_ and 
+
+# Every test function starts with test_ and
 # this test checks whether make_state() creates a 12 element vector
 def test_make_state_shape() -> None:
     x = make_state(VT=120.0, alpha=0.05, h=1000.0)
@@ -27,6 +30,7 @@ def test_make_state_shape() -> None:
     assert x[StateIndex.VT] == pytest.approx(120.0)
     assert x[StateIndex.ALPHA] == pytest.approx(0.05)
     assert x[StateIndex.H] == pytest.approx(1000.0)
+
 
 def test_make_control_shape() -> None:
     u = make_control(delta_canard=0.01, throttle=0.7)
@@ -70,7 +74,9 @@ def test_state_to_dict() -> None:
     x = make_state(VT=150.0, alpha=0.1, theta=0.2, h=2000.0)
     d = state_to_dict(x)
 
-    assert d["VT"] == pytest.approx(150.0)  # pytest.approx is used for floating point comparison here
+    assert d["VT"] == pytest.approx(
+        150.0
+    )  # pytest.approx is used for floating point comparison here
     assert d["alpha"] == pytest.approx(0.1)
     assert d["theta"] == pytest.approx(0.2)
     assert d["h"] == pytest.approx(2000.0)

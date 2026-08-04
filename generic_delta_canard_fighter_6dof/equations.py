@@ -24,8 +24,8 @@ All units are SI units.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 
@@ -39,13 +39,13 @@ from generic_delta_canard_fighter_6dof.kinematics import (
     wind_to_body_velocity,
 )
 from generic_delta_canard_fighter_6dof.state import (
-    ControlIndex,
     NUM_STATES,
     StateIndex,
     validate_control,
     validate_state,
 )
 from generic_delta_canard_fighter_6dof.transforms import ned_to_body_dcm
+
 
 @dataclass
 class ForcesMoments:
@@ -73,7 +73,7 @@ class ForcesMoments:
         M = pitching moment about y_b
         N = yawing moment about z_b
     """
-    
+
     force_body_N: np.ndarray
     moment_body_Nm: np.ndarray
 
@@ -89,6 +89,7 @@ ForceMomentModel = Callable[
     [float, np.ndarray, np.ndarray, AircraftGeometry],
     ForcesMoments,
 ]
+
 
 def zero_forces_moments(
     t: float,
@@ -109,7 +110,10 @@ def zero_forces_moments(
         moment_body_Nm=np.zeros(3),
     )
 
-def gravity_force_body(phi: float, theta: float, psi: float, mass_kg: float) -> np.ndarray:
+
+def gravity_force_body(
+    phi: float, theta: float, psi: float, mass_kg: float
+) -> np.ndarray:
     """
     Compute gravity force expressed in body axes.
 
@@ -145,6 +149,7 @@ def gravity_force_body(phi: float, theta: float, psi: float, mass_kg: float) -> 
     C_bn = ned_to_body_dcm(phi, theta, psi)
 
     return C_bn @ gravity_ned_N
+
 
 def translational_acceleration_body(
     velocity_body_mps: np.ndarray,
@@ -186,6 +191,7 @@ def translational_acceleration_body(
 
     return total_force_body_N / mass_kg - coriolis_term
 
+
 def rotational_acceleration_body(
     angular_rates_radps: np.ndarray,
     total_moment_body_Nm: np.ndarray,
@@ -223,6 +229,7 @@ def rotational_acceleration_body(
 
     return inverse_inertia @ (total_moment_body_Nm - gyroscopic_term)
 
+
 def body_velocity_derivatives_to_wind_derivatives(
     u: float,
     v: float,
@@ -251,7 +258,7 @@ def body_velocity_derivatives_to_wind_derivatives(
     The state stores VT, alpha, beta, but the rigid-body equations produce
     u_dot, v_dot, w_dot. This function connects the two representations.
     """
-    VT, alpha, beta = body_to_wind_angles(u, v, w)
+    VT, _alpha, beta = body_to_wind_angles(u, v, w)
 
     if VT < EPSILON:
         return 0.0, 0.0, 0.0
@@ -398,6 +405,7 @@ def aircraft_dynamics(
     x_dot[StateIndex.H] = altitude_rate_from_down_velocity(velocity_ned[2])
 
     return x_dot
+
 
 def _as_vector3(vector: np.ndarray, name: str) -> np.ndarray:
     """

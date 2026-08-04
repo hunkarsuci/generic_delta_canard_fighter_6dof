@@ -6,7 +6,6 @@ from collections.abc import Callable
 
 import numpy as np
 
-
 DerivativeFunction = Callable[[float, np.ndarray], np.ndarray]
 
 

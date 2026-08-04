@@ -1,6 +1,6 @@
 """
 Physical and numerical constants used by the 6DOF aircraft simulator.
-All contants use SI units unless explicitly stated otherwise. 
+All contants use SI units unless explicitly stated otherwise.
 """
 
 from __future__ import annotations

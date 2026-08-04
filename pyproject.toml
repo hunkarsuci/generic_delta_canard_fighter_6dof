@@ -20,7 +20,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest"
+    "pytest",
+    "pytest-cov",
+    "ruff",
 ]
 
 [tool.pytest.ini_options]

@@ -1,309 +1,170 @@
-# Generic Delta-Canard Fighter 6DOF Dynamics and Control
+# Generic Delta-Canard Fighter 6DOF Dynamics
 
-This project is an educational Python implementation of a nonlinear 6DOF flight dynamics and control simulator for a generic delta-canard fighter aircraft.
+A Python implementation of a nonlinear six-degree-of-freedom flight dynamics
+model for a generic delta-canard fighter aircraft — built for education,
+research prototyping, and flight-dynamics software engineering practice.
 
-The goal is to build the simulator step by step while learning the engineering behind each part: coordinate frames, aircraft kinematics, atmosphere modeling, rigid-body dynamics, aerodynamics, trim, control design, and real-time simulation.
+This is not a model of any real aircraft. All aerodynamic coefficients and
+aircraft parameters are generic, configurable placeholders.
 
-This is not an official model of any real aircraft. The aircraft parameters and aerodynamic model are generic and configurable. The project is intended for education, research prototyping, and software engineering practice.
+## Implementation status
 
----
+| Capability | Status |
+|---|---|
+| State/control vectors (12-state, 5-control) | ✓ Implemented |
+| Body/NED frame transformations (3-2-1 Euler) | ✓ Validated |
+| Quaternion utilities (Hamilton algebra) | ✓ Implemented |
+| Wind ⇄ body velocity conversion | ✓ Validated |
+| ISA atmosphere (0–20 km) | ✓ Validated |
+| Aircraft geometry and mass properties | ✓ Implemented |
+| Nonlinear 6DOF equations of motion | ✓ Validated |
+| Euler and RK4 integrators | ✓ Verified (4th-order convergence) |
+| Generic aerodynamic model | ✓ Implemented (placeholder coefficients) |
+| Generic propulsion model | ✓ Implemented (placeholder parameters) |
+| Straight-and-level trim | ✓ Validated (residuals < 1e-6 × weight) |
+| Numerical linearization | ✓ Validated (nonlinear vs linear < 20% over 0.5 s) |
+| Stability/modal analysis | ✓ Implemented |
+| Deterministic evaluation CLI | ✓ Implemented |
+| CI (lint, format, test, coverage, eval) | ✓ Configured |
+| Actuator dynamics | Not implemented |
+| PID/LQR control | Not implemented |
+| Real-time simulation | Not implemented |
 
-## Project Status
+## Reproducible result
 
-This repository is being developed phase by phase.
-
-Current progress:
-
-- [x] Phase 0 - Project skeleton
-- [x] Phase 1 - Constants, units, state vector, and control vector
-- [x] Phase 2 - Body frame, NED frame, kinematics, and quaternion utilities
-- [x] Phase 3 - ISA atmosphere model, Mach number, and dynamic pressure
-- [x] Phase 4 - Aircraft geometry and mass properties
-- [x] Phase 5 - Nonlinear 6DOF equations
-- [ ] Phase 6 - Aerodynamic model
-- [ ] Phase 7 - Propulsion and actuators
-- [ ] Phase 8 - Trim
-- [ ] Phase 9 - Linearization
-- [ ] Phase 10 - PID control
-- [ ] Phase 11 - LQR control
-- [ ] Phase 12 - Real-time simulation engineering
-
-Development started in June 2026 and the repository is updated gradually.
-
----
-
-## Educational Scope
-
-The simulator is designed to teach:
-
-- aircraft rigid-body dynamics
-- body-fixed and NED coordinate frames
-- Euler-angle attitude representation
-- quaternion attitude utilities
-- wind variables and body-axis velocity conversion
-- International Standard Atmosphere modeling
-- Mach number and dynamic pressure
-- aerodynamic force and moment modeling
-- propulsion modeling
-- actuator modeling
-- trim and equilibrium flight
-- numerical linearization
-- PID control
-- LQR control
-- real-time simulation engineering
-- testing and GitHub-based engineering workflow
-
----
-
-## State Vector
-
-The baseline simulator uses a 12-state Euler-angle model:
-
-```text
-x = [
-    VT, alpha, beta,
-    p, q, r,
-    phi, theta, psi,
-    x_N, y_E, h
-]
+```bash
+python examples/evaluate_6dof.py --state-only
 ```
 
-where:
+Example output (gravity-only, generic aero coefficients):
 
-| State | Meaning | Unit |
-|---|---|---|
-| `VT` | total airspeed | m/s |
-| `alpha` | angle of attack | rad |
-| `beta` | sideslip angle | rad |
-| `p` | body roll rate | rad/s |
-| `q` | body pitch rate | rad/s |
-| `r` | body yaw rate | rad/s |
-| `phi` | roll angle | rad |
-| `theta` | pitch angle | rad |
-| `psi` | yaw / heading angle | rad |
-| `x_N` | north position | m |
-| `y_E` | east position | m |
-| `h` | altitude | m |
-
-The project uses SI units internally.
-
-Angles are stored in radians, not degrees.
-
----
-
-## Control Vector
-
-The current control vector is:
-
-```text
-u = [
-    delta_canard,
-    delta_elevon_left,
-    delta_elevon_right,
-    delta_rudder,
-    throttle
-]
+```json
+{
+  "dt": 0.01,
+  "t_final": 10.0,
+  "final_altitude_m": 4508.17,
+  "final_speed_mps": 222.81,
+  "max_alpha_deg": 28.88,
+  "quaternion_norm_deviation": 0.0,
+  "me_change_percent": 8.43e-14,
+  "any_nonfinite_state": false
+}
 ```
 
-where:
+## Model architecture
 
-| Control | Meaning | Unit |
-|---|---|---|
-| `delta_canard` | canard deflection | rad |
-| `delta_elevon_left` | left elevon deflection | rad |
-| `delta_elevon_right` | right elevon deflection | rad |
-| `delta_rudder` | rudder deflection | rad |
-| `throttle` | engine command | 0 to 1 |
+See `docs/model.md` for the full architecture description.
 
----
+Key points:
+- 12-state wind-axis formulation: [VT, α, β, p, q, r, φ, θ, ψ, x_N, y_E, h]
+- 5-control vector: [δ_canard, δ_el_L, δ_el_R, δ_rudder, throttle]
+- NED navigation frame, body-fixed frame, flat-earth assumption
+- Pluggable force/moment models (aerodynamics, propulsion)
+- `docs/conventions.md` — full coordinate and sign convention reference
 
-## Coordinate Frame Convention
+## Aerodynamic model
 
-This project uses a local North-East-Down frame as the navigation frame.
+**All coefficients are generic placeholders** — not representative of any real
+aircraft. See `docs/aerodynamic_data.md` for the complete coefficient inventory.
 
-Body frame:
-
-```text
-x_b = forward through the aircraft nose
-y_b = right wing
-z_b = downward
-```
-
-NED frame:
-
-```text
-x_N = north
-y_E = east
-z_D = down
-```
-
-The state vector stores altitude `h` as positive upward, while the NED frame uses down position as positive downward.
-
-Therefore:
-
-```text
-h_dot = -V_D
-```
-
-where `V_D` is the NED down velocity.
-
----
-
-## Quaternion Support
-
-The baseline simulator uses Euler angles because they are intuitive and useful for education.
-
-However, fighter aircraft may perform aggressive maneuvers where Euler angles can become singular near:
-
-```text
-theta = +/- 90 degrees
-```
-
-For this reason, the project also includes quaternion utilities.
-
-Quaternion convention:
-
-```text
-q = [q0, q1, q2, q3]
-```
-
-where `q0` is the scalar part.
-
-The quaternion utilities are currently support tools. A full 13-state quaternion-based dynamics model may be added later.
-
----
-
-## Atmosphere Model
-
-The project currently includes a simplified International Standard Atmosphere model for:
-
-```text
-0 m <= altitude <= 20,000 m
-```
-
-The atmosphere model computes:
-
-- temperature
-- pressure
-- density
-- speed of sound
-- Mach number
-- dynamic pressure
-
-The most important aerodynamic input from the atmosphere model is dynamic pressure:
-
-```text
-q_bar = 0.5 * rho * VT^2
-```
-
-Later, aerodynamic forces and moments will use:
-
-```text
-Force  = q_bar * S * C
-Moment = q_bar * S * reference_length * C
-```
-
----
-
-## Repository Structure
-
-```text
-generic_delta_canard_fighter_6dof/
-├── generic_delta_canard_fighter_6dof/
-│   ├── __init__.py
-│   ├── constants.py
-│   ├── units.py
-│   ├── state.py
-│   ├── transforms.py
-│   ├── quaternions.py
-│   ├── kinematics.py
-│   └── atmosphere.py
-│
-├── examples/
-│   └── run_01_atmosphere_demo.py
-│
-├── tests/
-│   ├── test_state.py
-│   ├── test_transforms.py
-│   ├── test_quaternions.py
-│   ├── test_kinematics.py
-│   └── test_atmosphere.py
-│
-├── README.md
-├── pyproject.toml
-├── requirements.txt
-└── LICENSE
-```
-
-This structure will expand as new phases are implemented.
-
----
+The model uses:
+- Linear lift, drag, and pitching moment in α
+- Linear side-force and roll/yaw moments in β
+- Linear control derivatives
+- No Mach, Reynolds, or stall effects
 
 ## Installation
 
-Clone the repository:
+Requires Python ≥ 3.10.
 
 ```bash
 git clone https://github.com/hunkarsuci/generic_delta_canard_fighter_6dof.git
 cd generic_delta_canard_fighter_6dof
-```
-
-Create and activate a virtual environment.
-
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-Install the package in editable mode with development dependencies:
-
-```powershell
 python -m pip install -e ".[dev]"
 ```
 
----
+## Running the nonlinear evaluation
 
-## Running Tests
-
-Run all tests from the repository root:
-
-```powershell
-pytest
+```bash
+python examples/evaluate_6dof.py --state-only
 ```
 
-The project uses tests to verify each educational phase before moving to the next one.
+Options:
+- `--config PATH` — JSON configuration file
+- `--output PATH` — write JSON summary to file
+- `--dt FLOAT` — integration step [s] (default 0.01)
+- `--t-final FLOAT` — simulation duration [s] (default 10.0)
+- `--state-only` — print metrics to stdout
 
----
+## Computing trim
 
-## Running the Atmosphere Demo
-
-Run:
-
-```powershell
-python .\examples\run_01_atmosphere_demo.py
+```bash
+python -c "
+from generic_delta_canard_fighter_6dof.trim import trim_straight_level
+r = trim_straight_level(5000.0, 200.0)
+print(f'alpha={r.alpha_deg:.3f} deg, throttle={r.throttle:.4f}, de={r.symmetric_elevon_deg:.3f} deg')
+print(f'force residual: {r.force_residual_N}')
+print(f'moment residual: {r.moment_residual_Nm}')
+"
 ```
 
-This demo prints atmosphere values at several altitudes and plots:
+## Linearization and local validation
 
-- density versus altitude
-- speed of sound versus altitude
+```bash
+python -c "
+from generic_delta_canard_fighter_6dof.trim import trim_straight_level
+from generic_delta_canard_fighter_6dof.linearization import linearize
+from generic_delta_canard_fighter_6dof.propulsion import combined_forces_moments
+from generic_delta_canard_fighter_6dof.geometry import create_default_geometry
 
----
-
-## Development Philosophy
-
-This project is built slowly and deliberately.
-
-Each phase follows the same pattern:
-
-```text
-1. Learn the theory
-2. Implement the Python code
-3. Write tests
-4. Run examples
-5. Commit the milestone
+r = trim_straight_level(5000.0, 200.0)
+assert r.converged
+geo = create_default_geometry()
+fm = combined_forces_moments()
+lin = linearize(r.state, r.control, geo, fm)
+print(f'A shape: {lin.A.shape}, B shape: {lin.B.shape}')
+print(f'Residual norm: {np.linalg.norm(lin.x_dot0):.2e}')
+"
 ```
 
-The goal is not only to create a working simulator, but also to understand the flight dynamics and software engineering behind it.
+## Test and validation approach
+
+```bash
+python -m pytest -q                          # Run all tests
+python -m pytest --cov=generic_delta_canard_fighter_6dof --cov-report=term-missing
+python -m ruff format --check .              # Format check
+python -m ruff check .                       # Lint
+```
+
+See `docs/validation.md` for the structured validation matrix with
+requirement IDs (VAL-FRM-001 through VAL-LIN-006).
+
+## Known limitations
+
+1. **Aerodynamic coefficients are placeholder** — not validated against any real aircraft
+2. **Wind-axis singularity** — model cannot handle VT → 0
+3. **Euler angle singularity** — theta = ±90° causes failure
+4. **No actuator dynamics** — instantaneous control deflection
+5. **Flat Earth** — no curvature or rotation effects
+6. **No wind/gust modeling**
+7. **Linear aerodynamics** — no stall, no compressibility effects
+8. **Structural rigidity** — no aeroelastic effects
+9. **Simple propulsion** — thrust = T_max × throttle, no Mach/altitude dependence
+
+## Planned work
+
+- Actuator rate and position limits
+- PID and LQR control laws
+- Real-time simulation support
+- Quaternion-based state formulation (removes Euler singularity)
+- [OWNER INPUT REQUIRED]: Replace placeholder aerodynamic coefficients
+
+## References
+
+- Stevens, B. L., Lewis, F. L., & Johnson, E. N. — *Aircraft Control and Simulation* (3rd ed.)
+- Zipfel, P. H. — *Modeling and Simulation of Aerospace Vehicle Dynamics* (3rd ed.)
+- ISO 2533:1975 — *Standard Atmosphere*
+
+## License
+
+This project is licensed under the terms in the LICENSE file.

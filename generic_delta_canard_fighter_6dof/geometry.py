@@ -14,7 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np 
+import numpy as np
+
 
 @dataclass(frozen=True)
 class AircraftGeometry:
@@ -46,6 +47,7 @@ class AircraftGeometry:
     z_cg_m:
         Center of gravity z-location relative to reference point [m].
     """
+
     mass_kg: float
 
     Ixx_kg_m2: float
@@ -91,7 +93,6 @@ class AircraftGeometry:
         if not is_positive_definite(inertia_matrix):
             raise ValueError("Aircraft inertia matrix must be positive definite.")
 
-
     def inertia_matrix_kg_m2(self) -> np.ndarray:
         """
         Return the aircraft inertia matrix about the body axes.
@@ -122,7 +123,7 @@ class AircraftGeometry:
             ],
             dtype=float,
         )
-    
+
     def inverse_inertia_matrix_kg_m2(self) -> np.ndarray:
         """
         Return the inverse of the aircraft inertia matrix.
@@ -147,6 +148,7 @@ class AircraftGeometry:
             S = wing reference area
         """
         return self.wingspan_m**2 / self.wing_area_m2
+
 
 def is_positive_definite(matrix: np.ndarray) -> bool:
     """
@@ -173,6 +175,7 @@ def is_positive_definite(matrix: np.ndarray) -> bool:
     eigenvalues = np.linalg.eigvalsh(matrix)
 
     return bool(np.all(eigenvalues > 0.0))
+
 
 def create_default_geometry() -> AircraftGeometry:
     """
