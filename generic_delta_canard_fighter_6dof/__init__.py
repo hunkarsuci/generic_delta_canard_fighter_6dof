@@ -1,8 +1,23 @@
 """Generic Delta-Canard Fighter 6DOF — public API."""
 
+from generic_delta_canard_fighter_6dof.actuators import (
+    Actuator,
+    ActuatorBank,
+    ActuatorConfig,
+    ActuatorState,
+    default_canard_config,
+    default_elevon_config,
+    default_rudder_config,
+    default_throttle_config,
+)
 from generic_delta_canard_fighter_6dof.aerodynamics import (
     AeroCoefficients,
     aerodynamic_forces_moments,
+)
+from generic_delta_canard_fighter_6dof.allocation import (
+    AllocationConfig,
+    AllocationResult,
+    allocate,
 )
 from generic_delta_canard_fighter_6dof.atmosphere import (
     AtmosphereState,
@@ -19,6 +34,16 @@ from generic_delta_canard_fighter_6dof.constants import (
     GRAVITY_MPS2,
     SEA_LEVEL_PRESSURE_PA,
     SEA_LEVEL_TEMPERATURE_K,
+)
+from generic_delta_canard_fighter_6dof.control import (
+    AircraftPID,
+    AircraftPIDConfig,
+    LQRConfig,
+    LQRController,
+    LQRResult,
+    PIDConfig,
+    PIDController,
+    compute_lqr,
 )
 from generic_delta_canard_fighter_6dof.equations import (
     ForcesMoments,
@@ -73,6 +98,13 @@ from generic_delta_canard_fighter_6dof.quaternions import (
     quaternion_to_dcm,
     quaternion_to_euler,
 )
+from generic_delta_canard_fighter_6dof.realtime import (
+    Clock,
+    FakeClock,
+    RealtimeConfig,
+    RealtimeRunner,
+    RealtimeStats,
+)
 from generic_delta_canard_fighter_6dof.simulation import (
     SimulationResult,
     simulate,
@@ -103,6 +135,12 @@ from generic_delta_canard_fighter_6dof.trim import (
     TrimResult,
     trim_straight_level,
 )
+from generic_delta_canard_fighter_6dof.trim_map import (
+    TrimMapPoint,
+    compute_trim_map,
+    trim_map_summary,
+    write_trim_map_csv,
+)
 from generic_delta_canard_fighter_6dof.units import (
     deg_to_rad,
     ft_to_m,
@@ -121,23 +159,43 @@ __all__ = [
     "NUM_STATES",
     "SEA_LEVEL_PRESSURE_PA",
     "SEA_LEVEL_TEMPERATURE_K",
+    "Actuator",
+    "ActuatorBank",
+    "ActuatorConfig",
+    "ActuatorState",
     "AeroCoefficients",
     "AircraftGeometry",
+    "AircraftPID",
+    "AircraftPIDConfig",
+    "AllocationConfig",
+    "AllocationResult",
     "AtmosphereState",
+    "Clock",
     "ControlIndex",
+    "FakeClock",
     "FlightCondition",
     "ForcesMoments",
+    "LQRConfig",
+    "LQRController",
+    "LQRResult",
     "LinearizationResult",
     "ModeCharacteristics",
+    "PIDConfig",
+    "PIDController",
     "PropulsionConfig",
     "QuatStateIndex",
+    "RealtimeConfig",
+    "RealtimeRunner",
+    "RealtimeStats",
     "SimulationResult",
     "StabilityAnalysis",
     "StateIndex",
+    "TrimMapPoint",
     "TrimResult",
     "aerodynamic_forces_moments",
     "aircraft_dynamics",
     "aircraft_dynamics_quat",
+    "allocate",
     "altitude_rate_from_down_velocity",
     "analyze_stability",
     "body_to_ned_dcm",
@@ -145,8 +203,14 @@ __all__ = [
     "body_velocity_derivatives_to_wind_derivatives",
     "body_velocity_to_ned_velocity",
     "combined_forces_moments",
+    "compute_lqr",
+    "compute_trim_map",
     "control_to_dict",
     "create_default_geometry",
+    "default_canard_config",
+    "default_elevon_config",
+    "default_rudder_config",
+    "default_throttle_config",
     "deg_to_rad",
     "dynamic_pressure",
     "euler_rates",
@@ -185,9 +249,11 @@ __all__ = [
     "speed_of_sound",
     "state_to_dict",
     "translational_acceleration_body",
+    "trim_map_summary",
     "trim_straight_level",
     "validate_control",
     "validate_state",
     "wind_to_body_velocity",
+    "write_trim_map_csv",
     "zero_forces_moments",
 ]
