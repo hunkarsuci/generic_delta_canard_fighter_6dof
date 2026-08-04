@@ -11,6 +11,8 @@ Optional arguments:
     --output PATH       Write JSON summary to this file
     --dt FLOAT          Integration step size [s] (default 0.01)
     --t-final FLOAT     Simulation duration [s] (default 10.0)
+    --integrator NAME   Integration method: "rk4" (default) or "euler"
+    --gravity-only      Use zero non-gravitational forces (default: aero+propulsion)
     --state-only        Print final state and exit (no file output)
 """
 
@@ -33,6 +35,7 @@ from generic_delta_canard_fighter_6dof.equations import (
     zero_forces_moments,
 )
 from generic_delta_canard_fighter_6dof.geometry import create_default_geometry
+from generic_delta_canard_fighter_6dof.propulsion import combined_forces_moments
 from generic_delta_canard_fighter_6dof.simulation import simulate
 from generic_delta_canard_fighter_6dof.state import (
     StateIndex,
@@ -50,6 +53,7 @@ class EvalConfig:
     initial_state: dict[str, float] = field(default_factory=dict)
     control: dict[str, float] = field(default_factory=dict)
     integrator: str = "rk4"
+    gravity_only: bool = False
 
 
 def _default_initial_state() -> dict[str, float]:
@@ -114,6 +118,9 @@ def _build_config_from_args(args: list[str]) -> EvalConfig:
             config.integrator = str(args[i + 1])
             i += 2
         elif args[i] == "--state-only":
+            i += 1
+        elif args[i] == "--gravity-only":
+            config.gravity_only = True
             i += 1
         else:
             i += 1
@@ -211,9 +218,11 @@ def run_evaluation(config: EvalConfig) -> dict[str, Any]:
     x0 = make_state(**init)
     control = make_control(**ctrl_dict)
 
-    # Force/moment model: use zero_forces_moments (gravity only)
-    # This will be replaced when aerodynamic and propulsion models exist.
-    force_model = zero_forces_moments
+    # Force/moment model: aero + propulsion by default; gravity-only with flag
+    if config.gravity_only:
+        force_model = zero_forces_moments
+    else:
+        force_model = combined_forces_moments()
 
     def derivative(t: float, x: np.ndarray) -> np.ndarray:
         return aircraft_dynamics(t, x, control, geo, force_model)

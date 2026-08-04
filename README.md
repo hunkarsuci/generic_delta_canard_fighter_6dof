@@ -36,20 +36,22 @@ aircraft parameters are generic, configurable placeholders.
 python examples/evaluate_6dof.py --state-only
 ```
 
-Example output (gravity-only, generic aero coefficients):
+Example output (aero + propulsion model, default controls at zero, generic placeholder coefficients):
 
 ```json
 {
   "dt": 0.01,
   "t_final": 10.0,
-  "final_altitude_m": 4508.17,
-  "final_speed_mps": 222.81,
-  "max_alpha_deg": 28.88,
+  "final_altitude_m": 5237.03,
+  "final_speed_mps": 170.09,
+  "max_alpha_deg": 2.86,
   "quaternion_norm_deviation": 0.0,
-  "me_change_percent": 8.43e-14,
+  "me_change_percent": -4.65,
   "any_nonfinite_state": false
 }
 ```
+
+Use `--gravity-only` for the gravity-only (ballistic) baseline:
 
 ## Model architecture
 
@@ -94,7 +96,20 @@ Options:
 - `--output PATH` — write JSON summary to file
 - `--dt FLOAT` — integration step [s] (default 0.01)
 - `--t-final FLOAT` — simulation duration [s] (default 10.0)
+- `--integrator NAME` — `"rk4"` (default) or `"euler"`
+- `--gravity-only` — gravity-only ballistic flight (default: aero + propulsion)
 - `--state-only` — print metrics to stdout
+
+## Trim diagnostic sweep
+
+```bash
+python examples/trim_sweep.py            # human-readable table
+python examples/trim_sweep.py --json     # machine-readable output
+```
+
+Sweeps altitude × airspeed and reports convergence, residuals, and control
+usage. Uses existing synthetic coefficients without retuning. Any trim
+failures are documented with force/moment residuals.
 
 ## Computing trim
 
