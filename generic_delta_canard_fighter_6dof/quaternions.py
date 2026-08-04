@@ -1,7 +1,7 @@
 """
-Quaternions attitude utilities 
+Quaternions attitude utilities
 
-This module provides quaternion tools for fighter-aircraft attitude modeling 
+This module provides quaternion tools for fighter-aircraft attitude modeling
 
 The baseline simulator uses a 12-state Euler-angle model:
 
@@ -10,13 +10,13 @@ The baseline simulator uses a 12-state Euler-angle model:
 However, Euler angles become singular at theta = +/- 90 degrees. Fighter aircraft may perform aggressive maneuvers where quaternion attitude
 propagation is more robust.
 
-Quaternion convention used here: 
+Quaternion convention used here:
 
     q = [q0,q1,q2,q3]
 
-where q0 is the scalar part 
+where q0 is the scalar part
 
-The quaternion represents attitude from body fixed frame to NED frame, thereby the corresponding direction cosine matrix transforms vectors as: 
+The quaternion represents attitude from body fixed frame to NED frame, thereby the corresponding direction cosine matrix transforms vectors as:
 
     v_ned = C_nb @ v_body
 
@@ -24,33 +24,35 @@ The quaternion represents attitude from body fixed frame to NED frame, thereby t
 
 from __future__ import annotations
 
-import numpy as np 
+import numpy as np
 
-def normalize_quaternion(q: np.ndarray) -> np.ndarray: 
+
+def normalize_quaternion(q: np.ndarray) -> np.ndarray:
     """
-    Normalize a quaternion to unit length 
+    Normalize a quaternion to unit length
 
-    Parameters 
+    Parameters
 
     q:
         Quaternion [q0, q1, q2, q3]
-    Returns 
-    
+    Returns
+
     np.ndarray
         Unit quaternion.
-    
+
     """
     q = np.asarray(q, dtype=float)
 
     if q.shape != (4,):
         raise ValueError(f"Quaternion must have shape (4,), got {q.shape}.")
-    
+
     norm = np.linalg.norm(q)
 
-    if norm <= 0.0: 
+    if norm <= 0.0:
         raise ValueError("Cannot normalize a zero quaternion.")
-    
-    return q / norm 
+
+    return q / norm
+
 
 def quaternion_conjugate(q: np.ndarray) -> np.ndarray:
     """

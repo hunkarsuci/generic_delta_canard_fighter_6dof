@@ -102,7 +102,7 @@ def isa_atmosphere(altitude_m: float) -> AtmosphereState:
 
     1. Troposphere:
         0 m <= h <= 11,000 m
-        
+
         Temperature decreases linearly with altitude.
 
     2. Lower stratosphere:
@@ -288,9 +288,7 @@ def _troposphere_pressure(altitude_m: float) -> float:
     """
     temperature_K = _troposphere_temperature(altitude_m)
 
-    exponent = GRAVITY_MPS2 / (
-        AIR_GAS_CONSTANT_J_KG_K * TEMPERATURE_LAPSE_RATE_K_PER_M
-    )
+    exponent = GRAVITY_MPS2 / (AIR_GAS_CONSTANT_J_KG_K * TEMPERATURE_LAPSE_RATE_K_PER_M)
 
     return SEA_LEVEL_PRESSURE_PA * (temperature_K / SEA_LEVEL_TEMPERATURE_K) ** exponent
 
@@ -322,8 +320,10 @@ def _lower_stratosphere_pressure(altitude_m: float) -> float:
 
     altitude_difference_m = altitude_m - TROPOPAUSE_ALTITUDE_M
 
-    exponent = -GRAVITY_MPS2 * altitude_difference_m / (
-        AIR_GAS_CONSTANT_J_KG_K * temperature_K
+    exponent = (
+        -GRAVITY_MPS2
+        * altitude_difference_m
+        / (AIR_GAS_CONSTANT_J_KG_K * temperature_K)
     )
 
     return pressure_at_tropopause_Pa * np.exp(exponent)

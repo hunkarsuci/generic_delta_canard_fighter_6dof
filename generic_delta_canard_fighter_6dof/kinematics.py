@@ -79,7 +79,7 @@ def wind_to_body_velocity(VT: float, alpha: float, beta: float) -> np.ndarray:
     Convert wind variables to body-axis velocity components.
 
     Parameters
-   
+
     VT:
         Total airspeed [m/s].
     alpha:
@@ -93,7 +93,7 @@ def wind_to_body_velocity(VT: float, alpha: float, beta: float) -> np.ndarray:
         Body-axis velocity vector [u, v, w] in [m/s].
 
     Notes
-   
+
     Body velocity convention:
 
         u = forward velocity
@@ -130,7 +130,7 @@ def body_to_wind_angles(u: float, v: float, w: float) -> tuple[float, float, flo
         Downward body-axis velocity [m/s].
 
     Returns
- 
+
     tuple[float, float, float]
         Tuple (VT, alpha, beta), where:
 

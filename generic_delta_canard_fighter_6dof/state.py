@@ -124,7 +124,9 @@ def make_control(
 
     return u
 
+
 # we add here validation to check state numbers and airspeed has to be non-negative.
+
 
 def validate_state(x: np.ndarray) -> None:
     """
@@ -133,7 +135,9 @@ def validate_state(x: np.ndarray) -> None:
     x = np.asarray(x)
 
     if x.shape != (NUM_STATES,):
-        raise ValueError(f"State vector must have shape ({NUM_STATES},), got {x.shape}.")
+        raise ValueError(
+            f"State vector must have shape ({NUM_STATES},), got {x.shape}."
+        )
 
     if not np.all(np.isfinite(x)):
         raise ValueError("State vector contains non-finite values.")
@@ -149,7 +153,9 @@ def validate_control(u: np.ndarray) -> None:
     u = np.asarray(u)
 
     if u.shape != (NUM_CONTROLS,):
-        raise ValueError(f"Control vector must have shape ({NUM_CONTROLS},), got {u.shape}.")
+        raise ValueError(
+            f"Control vector must have shape ({NUM_CONTROLS},), got {u.shape}."
+        )
 
     if not np.all(np.isfinite(u)):
         raise ValueError("Control vector contains non-finite values.")
