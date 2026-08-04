@@ -184,12 +184,21 @@ python examples/compare_controllers.py
 ## Real-time simulation
 
 ```bash
-# Deterministic (fake clock, as-fast-as-possible)
-python examples/run_realtime.py --deterministic --duration 2
+# Default: 15 seconds soft real-time with terminal telemetry
+python examples/run_realtime.py
 
-# Soft real-time (wall-clock pacing)
-python examples/run_realtime.py --duration 5
+# With live matplotlib animation (altitude, airspeed, attitude, rates)
+python examples/run_realtime.py --animate
+
+# Deterministic (fake clock, as-fast-as-possible, shorter run)
+python examples/run_realtime.py --deterministic --duration 5
+
+# Custom step size
+python examples/run_realtime.py --animate --dt 0.005 --duration 30
 ```
+
+The `--animate` flag opens a live four-panel display showing altitude, airspeed,
+roll/pitch attitude, and body angular rates over the last 10 seconds of flight.
 
 This is a soft real-time demonstration and does not provide deterministic
 operating-system scheduling or hardware real-time guarantees.
