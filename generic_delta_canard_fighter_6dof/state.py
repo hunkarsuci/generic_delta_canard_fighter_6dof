@@ -24,7 +24,9 @@ All angular rates are in radians per second.
 """
 
 from __future__ import annotations
+
 from enum import IntEnum
+
 import numpy as np
 
 

@@ -24,8 +24,8 @@ All units are SI units.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 
@@ -258,7 +258,7 @@ def body_velocity_derivatives_to_wind_derivatives(
     The state stores VT, alpha, beta, but the rigid-body equations produce
     u_dot, v_dot, w_dot. This function connects the two representations.
     """
-    VT, alpha, beta = body_to_wind_angles(u, v, w)
+    VT, _alpha, beta = body_to_wind_angles(u, v, w)
 
     if VT < EPSILON:
         return 0.0, 0.0, 0.0

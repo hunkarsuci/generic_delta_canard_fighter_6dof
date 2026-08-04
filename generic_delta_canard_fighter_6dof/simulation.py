@@ -13,8 +13,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from generic_delta_canard_fighter_6dof.integrators import rk4_step, euler_step
-
+from generic_delta_canard_fighter_6dof.integrators import euler_step, rk4_step
 
 IntegratorFn = Callable[
     [Callable[[float, np.ndarray], np.ndarray], float, np.ndarray, float],

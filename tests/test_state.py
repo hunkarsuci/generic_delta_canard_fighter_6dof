@@ -3,13 +3,14 @@ Tests for state and control vector definitions
 """
 
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from generic_delta_canard_fighter_6dof.state import (
-    ControlIndex,
     NUM_CONTROLS,
     NUM_STATES,
+    ControlIndex,
     StateIndex,
     control_to_dict,
     make_control,

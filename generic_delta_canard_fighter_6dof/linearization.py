@@ -29,7 +29,6 @@ from generic_delta_canard_fighter_6dof.equations import aircraft_dynamics
 from generic_delta_canard_fighter_6dof.geometry import AircraftGeometry
 from generic_delta_canard_fighter_6dof.state import NUM_CONTROLS, NUM_STATES
 
-
 # Scale-aware perturbation sizes
 # Chosen to be ~sqrt(eps) for the most sensitive entries
 _DEFAULT_DX = np.array(

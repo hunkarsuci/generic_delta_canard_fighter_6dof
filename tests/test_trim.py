@@ -68,7 +68,7 @@ def test_trim_state_is_valid() -> None:
     result = trim_straight_level(5000.0, 200.0)
     assert result.converged
     # make_state does validation internally, just check it doesn't raise
-    from generic_delta_canard_fighter_6dof.state import validate_state, validate_control
+    from generic_delta_canard_fighter_6dof.state import validate_control, validate_state
 
     validate_state(result.state)
     validate_control(result.control)

@@ -16,7 +16,6 @@ from generic_delta_canard_fighter_6dof.quaternions import (
     quaternion_to_dcm,
     quaternion_to_euler,
 )
-
 from generic_delta_canard_fighter_6dof.transforms import body_to_ned_dcm
 
 

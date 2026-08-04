@@ -113,8 +113,9 @@ def test_simulate_different_dt_produces_different_result() -> None:
 
 def _run_eval(*args: str) -> str:
     """Run evaluate_6dof.main with given args and capture stdout."""
-    import sys
     import io
+    import sys
+
     from examples.evaluate_6dof import main
 
     old_stdout = sys.stdout
@@ -150,7 +151,6 @@ def test_evaluate_output_to_file() -> None:
         _run_eval("--state-only", "--output", str(tmp_path))
         # --state-only takes precedence and writes to stdout anyway based on code
         # Actually state_only bypasses file output. Let's test without --state-only:
-        pass
     finally:
         if tmp_path.exists():
             tmp_path.unlink()
@@ -170,8 +170,9 @@ def test_evaluate_custom_dt() -> None:
 
 
 def test_evaluate_invalid_config() -> None:
-    import sys
     import io
+    import sys
+
     from examples.evaluate_6dof import main
 
     old_stderr = sys.stderr

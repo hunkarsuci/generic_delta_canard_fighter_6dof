@@ -225,7 +225,7 @@ def trim_straight_level(
             gtol=1e-10,
             max_nfev=500,
         )
-    except Exception as exc:
+    except (ValueError, RuntimeError) as exc:
         return TrimResult(
             converged=False,
             message=f"Solver exception: {exc}",

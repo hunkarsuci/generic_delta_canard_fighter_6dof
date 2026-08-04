@@ -31,7 +31,6 @@ from generic_delta_canard_fighter_6dof.state import (
     make_state,
 )
 
-
 # ── helpers ───────────────────────────────────────────────────────────
 
 

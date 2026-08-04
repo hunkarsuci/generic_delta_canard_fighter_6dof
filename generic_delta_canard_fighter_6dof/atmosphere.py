@@ -28,7 +28,6 @@ from generic_delta_canard_fighter_6dof.constants import (
     SEA_LEVEL_TEMPERATURE_K,
 )
 
-
 TROPOPAUSE_ALTITUDE_M: float = 11_000.0
 LOWER_STRATOSPHERE_LIMIT_M: float = 20_000.0
 TEMPERATURE_LAPSE_RATE_K_PER_M: float = 0.0065

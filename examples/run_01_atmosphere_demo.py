@@ -8,8 +8,8 @@ Run from the repository root:
 
 from __future__ import annotations
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from generic_delta_canard_fighter_6dof.atmosphere import (
     flight_condition,
