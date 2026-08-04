@@ -39,6 +39,7 @@ from generic_delta_canard_fighter_6dof.state import (
     make_control,
     make_state,
 )
+from generic_delta_canard_fighter_6dof.units import rad_to_deg
 
 
 @dataclass
@@ -187,8 +188,8 @@ def _compute_metrics(
         "final_speed_mps": VT_final,
         "max_speed_mps": float(np.max(VT_history)),
         "min_speed_mps": float(np.min(VT_history)),
-        "max_alpha_deg": float(np.rad2deg(np.max(np.abs(alpha_history)))),
-        "max_beta_deg": float(np.rad2deg(np.max(np.abs(beta_history)))),
+        "max_alpha_deg": float(rad_to_deg(np.max(np.abs(alpha_history)))),
+        "max_beta_deg": float(rad_to_deg(np.max(np.abs(beta_history)))),
         "max_body_rate_radps": float(np.max(body_rate_history)),
         "quaternion_norm_deviation": quat_norm_deviation,
         "me_change_percent": me_change_pct,

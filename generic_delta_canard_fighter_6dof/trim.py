@@ -32,6 +32,7 @@ from generic_delta_canard_fighter_6dof.state import (
     make_control,
     make_state,
 )
+from generic_delta_canard_fighter_6dof.units import deg_to_rad, rad_to_deg
 
 
 @dataclass
@@ -141,10 +142,10 @@ def trim_straight_level(
 
     # ── bounds on unknowns ──
     # unknowns: [alpha_rad, symmetric_elevon_rad, throttle]
-    alpha_min = np.deg2rad(-5.0)
-    alpha_max = np.deg2rad(20.0)
-    de_min = np.deg2rad(-25.0)
-    de_max = np.deg2rad(25.0)
+    alpha_min = deg_to_rad(-5.0)
+    alpha_max = deg_to_rad(20.0)
+    de_min = deg_to_rad(-25.0)
+    de_max = deg_to_rad(25.0)
     throttle_min = 0.0
     throttle_max = 1.0
 
@@ -153,7 +154,7 @@ def trim_straight_level(
 
     x0 = np.array(
         [
-            np.deg2rad(alpha0_deg),
+            deg_to_rad(alpha0_deg),
             0.0,
             0.5,
         ]
@@ -229,10 +230,10 @@ def trim_straight_level(
             converged=False,
             message=f"Solver exception: {exc}",
             nfev=nfev,
-            alpha_deg=float(np.rad2deg(x0[0])),
-            theta_deg=float(np.rad2deg(x0[0])),
+            alpha_deg=float(rad_to_deg(x0[0])),
+            theta_deg=float(rad_to_deg(x0[0])),
             throttle=float(x0[2]),
-            symmetric_elevon_deg=float(np.rad2deg(x0[1])),
+            symmetric_elevon_deg=float(rad_to_deg(x0[1])),
             state=make_state(),
             control=make_control(),
             requested_altitude_m=altitude_m,
@@ -283,10 +284,10 @@ def trim_straight_level(
         converged=converged,
         message=str(result.message),
         nfev=nfev,
-        alpha_deg=float(np.rad2deg(alpha_r)),
-        theta_deg=float(np.rad2deg(alpha_r)),
+        alpha_deg=float(rad_to_deg(alpha_r)),
+        theta_deg=float(rad_to_deg(alpha_r)),
         throttle=float(thr),
-        symmetric_elevon_deg=float(np.rad2deg(de_r)),
+        symmetric_elevon_deg=float(rad_to_deg(de_r)),
         state=state,
         control=control,
         force_residual_N=force_residual,
