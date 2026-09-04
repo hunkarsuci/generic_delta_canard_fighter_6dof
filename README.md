@@ -1,5 +1,11 @@
 # Generic Delta-Canard Fighter 6DOF Dynamics
 
+[![CI](https://github.com/hunkarsuci/generic_delta_canard_fighter_6dof/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hunkarsuci/generic_delta_canard_fighter_6dof/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://github.com/hunkarsuci/generic_delta_canard_fighter_6dof/blob/main/LICENSE)
+[![Code style: Ruff](https://img.shields.io/badge/code%20style-Ruff-D7FF64.svg?logo=ruff&logoColor=261230)](https://docs.astral.sh/ruff/)
+[![Maintainer: Hunkar Suci](https://img.shields.io/badge/maintainer-Hunkar%20Suci-0A66C2.svg)](https://github.com/hunkarsuci)
+
 A Python implementation of a nonlinear six-degree-of-freedom flight dynamics
 model for a generic delta-canard fighter aircraft. Built for education,
 research prototyping, and flight-dynamics software engineering practice.
