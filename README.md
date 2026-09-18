@@ -6,6 +6,15 @@
 [![Code style: Ruff](https://img.shields.io/badge/code%20style-Ruff-D7FF64.svg?logo=ruff&logoColor=261230)](https://docs.astral.sh/ruff/)
 [![Maintainer: Hunkar Suci](https://img.shields.io/badge/maintainer-Hunkar%20Suci-0A66C2.svg)](https://github.com/hunkarsuci)
 
+![Project simulation: a generic delta-canard aircraft recovers from an 18-degree bank using LQR control, with actual attitude, airspeed, altitude, and roll-history readouts.](docs/assets/canard-aircraft.gif)
+
+[View still image](docs/assets/canard-aircraft.png) · [Configure and regenerate](docs/assets/README.md)
+
+The animation replays this project's nonlinear quaternion dynamics with LQR
+control and actuator dynamics. Wing span and area come from the aircraft model;
+the detailed airframe shape is illustrative. The six-second recovery repeats
+after a brief pause. All aerodynamic parameters remain synthetic.
+
 A Python implementation of a nonlinear six-degree-of-freedom flight dynamics
 model for a generic delta-canard fighter aircraft. Built for education,
 research prototyping, and flight-dynamics software engineering practice.
