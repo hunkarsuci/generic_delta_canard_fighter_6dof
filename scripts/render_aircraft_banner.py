@@ -12,6 +12,7 @@ import json
 import math
 from dataclasses import asdict, dataclass, field, replace
 from functools import lru_cache
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -28,8 +29,8 @@ from generic_delta_canard_fighter_6dof.geometry import (
 from generic_delta_canard_fighter_6dof.integrators import rk4_step
 from generic_delta_canard_fighter_6dof.linearization import linearize
 from generic_delta_canard_fighter_6dof.propulsion import combined_forces_moments
+from generic_delta_canard_fighter_6dof.quat_state import QuatStateIndex as QI
 from generic_delta_canard_fighter_6dof.quat_state import (
-    QuatStateIndex as QI,
     euler_state_to_quat_state,
     quat_state_to_euler_state,
 )
@@ -129,7 +130,9 @@ def simulate_flight(config: BannerConfig) -> FlightTrace:
         command = controller.step(quat_state_to_euler_state(state))
         achieved = actuators.step(command, dt)
         state = rk4_step(
-            lambda t, x: aircraft_dynamics_quat(t, x, achieved, geometry, model),
+            lambda t, x, achieved=achieved: aircraft_dynamics_quat(
+                t, x, achieved, geometry, model
+            ),
             i * dt,
             state,
             dt,
@@ -222,7 +225,7 @@ def aircraft_mesh(geometry: AircraftGeometry, control: np.ndarray):
             ]
             for x, ry, rz, z in stations
         ]
-        for first, second in zip(rings, rings[1:]):
+        for first, second in pairwise(rings):
             for i in range(segments):
                 j = (i + 1) % segments
                 face([first[i], first[j], second[j], second[i]], color)
