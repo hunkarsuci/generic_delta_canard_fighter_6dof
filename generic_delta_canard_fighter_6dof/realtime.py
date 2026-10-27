@@ -19,6 +19,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from numbers import Integral
 
 import numpy as np
 
@@ -47,8 +48,18 @@ class RealtimeConfig:
     log_overruns: bool = True
 
     def __post_init__(self) -> None:
+        if not np.isfinite(self.dt) or self.dt <= 0.0:
+            raise ValueError("dt must be finite and positive.")
         if self.wallclock_dt is None:
             self.wallclock_dt = self.dt
+        if not np.isfinite(self.wallclock_dt) or self.wallclock_dt < 0.0:
+            raise ValueError("wallclock_dt must be finite and non-negative.")
+        if self.max_overruns is not None and (
+            isinstance(self.max_overruns, bool)
+            or not isinstance(self.max_overruns, Integral)
+            or self.max_overruns <= 0
+        ):
+            raise ValueError("max_overruns must be a positive integer or None.")
 
 
 @dataclass
@@ -149,7 +160,7 @@ class RealtimeRunner:
         self.stats = RealtimeStats()
         self._consecutive_overruns = 0
 
-    def step(self) -> None:
+    def step(self, step_dt: float | None = None) -> None:
         """Advance the simulation by one time step with wall-clock pacing.
 
         Raises
@@ -161,17 +172,27 @@ class RealtimeRunner:
             return
 
         cfg = self.config
+        integration_dt = cfg.dt if step_dt is None else step_dt
+        if not np.isfinite(integration_dt) or integration_dt <= 0.0:
+            raise ValueError("step_dt must be finite and positive.")
+        if integration_dt > cfg.dt:
+            raise ValueError("step_dt must not exceed the configured dt.")
         wallclock_start = self.clock.time()
 
         # Integration step
-        self._state = self.step_fn(self.derivative_fn, self._sim_t, self._state, cfg.dt)
+        self._state = self.step_fn(
+            self.derivative_fn,
+            self._sim_t,
+            self._state,
+            integration_dt,
+        )
 
         # Check for non-finite state
         if not np.all(np.isfinite(self._state)):
             self.stats.running = False
             raise RuntimeError(f"Non-finite state detected at t = {self._sim_t:.3e}")
 
-        self._sim_t += cfg.dt
+        self._sim_t += integration_dt
         self.stats.sim_time = self._sim_t
         self.stats.steps_completed += 1
 
@@ -180,7 +201,8 @@ class RealtimeRunner:
         self.stats.wall_time += elapsed
 
         if cfg.wallclock_dt is not None and cfg.wallclock_dt > 0:
-            sleep_time = cfg.wallclock_dt - elapsed
+            target_wallclock_dt = cfg.wallclock_dt * integration_dt / cfg.dt
+            sleep_time = target_wallclock_dt - elapsed
             if sleep_time > 0:
                 self.clock.sleep(sleep_time)
                 self._consecutive_overruns = 0
@@ -217,14 +239,21 @@ class RealtimeRunner:
         RealtimeStats
             Final statistics.
         """
-        n_steps = int(np.ceil(t_final / self.config.dt))
-        for _ in range(n_steps):
-            if not self.stats.running:
+        if not np.isfinite(t_final) or t_final < 0.0:
+            raise ValueError("t_final must be finite and non-negative.")
+
+        tolerance = 8.0 * np.finfo(float).eps * max(1.0, abs(t_final))
+        while t_final - self._sim_t > tolerance:
+            if not self.stats.running or self.stats.paused:
                 break
             try:
-                self.step()
+                remaining = t_final - self._sim_t
+                self.step(min(self.config.dt, remaining))
             except RuntimeError:
                 break
+        if abs(t_final - self._sim_t) <= tolerance:
+            self._sim_t = t_final
+            self.stats.sim_time = t_final
         return self.stats
 
     def pause(self) -> None:

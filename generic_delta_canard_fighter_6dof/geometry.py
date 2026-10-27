@@ -67,6 +67,24 @@ class AircraftGeometry:
         """
         Validate geometry and mass-property values after object creation.
         """
+        values = {
+            "mass_kg": self.mass_kg,
+            "Ixx_kg_m2": self.Ixx_kg_m2,
+            "Iyy_kg_m2": self.Iyy_kg_m2,
+            "Izz_kg_m2": self.Izz_kg_m2,
+            "Ixz_kg_m2": self.Ixz_kg_m2,
+            "wing_area_m2": self.wing_area_m2,
+            "wingspan_m": self.wingspan_m,
+            "mean_aerodynamic_chord_m": self.mean_aerodynamic_chord_m,
+            "x_cg_m": self.x_cg_m,
+            "y_cg_m": self.y_cg_m,
+            "z_cg_m": self.z_cg_m,
+        }
+        nonfinite = [name for name, value in values.items() if not np.isfinite(value)]
+        if nonfinite:
+            names = ", ".join(nonfinite)
+            raise ValueError(f"Aircraft geometry values must be finite: {names}.")
+
         if self.mass_kg <= 0.0:
             raise ValueError("Aircraft mass must be positive.")
 

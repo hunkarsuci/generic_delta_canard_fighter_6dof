@@ -145,3 +145,22 @@ def test_rejects_non_positive_definite_inertia() -> None:
             wingspan_m=10.0,
             mean_aerodynamic_chord_m=5.0,
         )
+
+
+@pytest.mark.parametrize("field_name", ["mass_kg", "Ixz_kg_m2", "x_cg_m"])
+@pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf])
+def test_rejects_nonfinite_geometry_values(field_name, value) -> None:
+    kwargs = {
+        "mass_kg": 10_000.0,
+        "Ixx_kg_m2": 1.0,
+        "Iyy_kg_m2": 2.0,
+        "Izz_kg_m2": 3.0,
+        "Ixz_kg_m2": 0.1,
+        "wing_area_m2": 50.0,
+        "wingspan_m": 10.0,
+        "mean_aerodynamic_chord_m": 5.0,
+    }
+    kwargs[field_name] = value
+
+    with pytest.raises(ValueError, match="must be finite"):
+        AircraftGeometry(**kwargs)

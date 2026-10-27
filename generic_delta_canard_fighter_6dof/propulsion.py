@@ -30,11 +30,16 @@ class PropulsionConfig:
     """Unit vector of thrust direction in body axes."""
 
     def __post_init__(self) -> None:
+        if not np.isfinite(self.max_thrust_N) or self.max_thrust_N < 0.0:
+            raise ValueError("max_thrust_N must be finite and non-negative.")
+
         axis = np.asarray(self.thrust_axis_body, dtype=float)
         if axis.shape != (3,):
             raise ValueError("thrust_axis_body must have shape (3,).")
+        if not np.all(np.isfinite(axis)):
+            raise ValueError("thrust_axis_body must contain only finite values.")
         norm = np.linalg.norm(axis)
-        if norm <= 0:
+        if norm <= 0.0:
             raise ValueError("thrust_axis_body must be nonzero.")
         object.__setattr__(self, "thrust_axis_body", axis / norm)
 
