@@ -34,7 +34,7 @@ aircraft parameters are generic, configurable placeholders.
 | Geometry and mass properties | Complete | Unit verified | Inertia positive-definite check, defaults, validation | CG offsets stored but not consumed by dynamics |
 | Nonlinear 6DOF equations of motion | Complete | Numerically verified | Newton's second law, Coriolis, kinematic invariants | Beta -> +/-90 deg guarded; gravity hard-wired |
 | Euler and RK4 integrators | Complete | Numerically verified | Fourth-order convergence via step-halving | Fixed-step only |
-| Generic aerodynamic model | Complete | Unit and numerical verification | Dimensional, symmetry, sign, and bounds tests | Synthetic placeholder coefficients; no wind-tunnel or flight-data validation |
+| Generic aerodynamic model | Complete | Unit and numerical verification | Dimensional, symmetry, sign, canard authority, and bounds tests | Synthetic placeholder coefficients; no wind-tunnel or flight-data validation |
 | Generic propulsion model | Complete | Unit and numerical verification | Throttle and thrust-axis tests (indirect) | Synthetic parameters; no engine-deck validation |
 | Straight-and-level trim | Complete | Model-level validated | Residual below 1e-6 times weight, reproducibility, multi-point grid | Valid for generic placeholder model only; not a flight envelope |
 | Numerical linearization | Complete | Numerically verified | Nonlinear vs linear agreement over short horizon, perturbation sensitivity | Euler-angle coordinates; invalid near theta = +/-90 deg |
@@ -102,6 +102,11 @@ aircraft. See `docs/aerodynamic_data.md` for the complete coefficient inventory.
 
 The model uses linear lift, drag, and pitching moment in alpha; linear
 side-force and roll/yaw moments in beta; and linear control derivatives.
+Canard deflection (`delta_canard`) provides pitch and lift control authority
+(`Cm_dc > 0` for nose-up moment and `CL_dc > 0` for upward lift), correctly
+distinguished from aft-mounted elevons (`Cm_de < 0`).
+All aerodynamic parameters are explicitly synthetic educational placeholders
+and are not validated against flight or wind-tunnel data.
 There is no Mach, Reynolds, or stall dependence.
 
 ## Running the nonlinear evaluation
