@@ -96,9 +96,7 @@ def simulate(
     else:
         raise ValueError(f"Unknown integrator: '{integrator}'. Use 'rk4' or 'euler'.")
 
-    n_steps = int(np.ceil(t_final / dt))
-    if t_final == 0.0:
-        n_steps = 0
+    n_steps = 0 if t_final == 0.0 else int(np.ceil(t_final / dt))
 
     n_states = len(x0)
     t = np.zeros(n_steps + 1)
@@ -109,16 +107,17 @@ def simulate(
 
     current_x = x0.copy()
     for i in range(n_steps):
-        current_t = float(i) * dt
-        current_x = step_fn(derivative_fn, current_t, current_x, dt)
+        current_t = t[i]
+        step_dt = min(dt, t_final - current_t)
+        current_x = step_fn(derivative_fn, current_t, current_x, step_dt)
 
         if not np.all(np.isfinite(current_x)):
             raise RuntimeError(
-                f"Non-finite state detected at t ≈ {current_t + dt:.3e}. "
+                f"Non-finite state detected at t ≈ {current_t + step_dt:.3e}. "
                 "Simulation aborted."
             )
 
-        t[i + 1] = current_t + dt
+        t[i + 1] = current_t + step_dt
         x[i + 1] = current_x.copy()
 
     return SimulationResult(

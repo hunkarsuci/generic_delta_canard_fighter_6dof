@@ -45,6 +45,21 @@ def test_simulate_zero_duration() -> None:
     assert result.x[0, 0] == pytest.approx(5.0)
 
 
+def test_simulate_uses_partial_final_step() -> None:
+    result = simulate(_constant_deriv, np.array([0.0]), dt=0.3, t_final=1.0)
+
+    assert result.t[-1] == pytest.approx(1.0)
+    assert result.x[-1, 0] == pytest.approx(1.0)
+    assert np.diff(result.t).tolist() == pytest.approx([0.3, 0.3, 0.3, 0.1])
+
+
+def test_simulate_duration_shorter_than_step() -> None:
+    result = simulate(_constant_deriv, np.array([0.0]), dt=1.0, t_final=0.2)
+
+    assert result.t.tolist() == pytest.approx([0.0, 0.2])
+    assert result.x[-1, 0] == pytest.approx(0.2)
+
+
 def test_simulate_rejects_invalid_dt() -> None:
     with pytest.raises(ValueError):
         simulate(_constant_deriv, np.array([0.0]), dt=0.0, t_final=1.0)
