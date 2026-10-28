@@ -58,6 +58,25 @@ To maintain ODE solver generality:
 - Dedicated quaternion integration helpers (`rk4_step_quat`, `euler_step_quat`) and `normalize_quat_state` (in `quat_state.py`) enforce the unit-norm constraint explicitly after each integration step.
 - The `simulate()` interface accepts `integrator="rk4_quat"`, `integrator="euler_quat"`, or an explicit `post_step` hook.
 
+### Soft real-time execution semantics and observability
+
+The repository includes a soft real-time execution engine (`realtime.py`) designed for interactive demonstration and simulation pacing.
+
+Key characteristics and observability contracts:
+- **Soft real-time pacing**: Uses wall-clock pacing (`time.monotonic()` via injectable `Clock` interface) to pace the simulation step `dt` against target wall-clock step `wallclock_dt`. It does **not** provide hard real-time or RTOS deterministic guarantees.
+- **Timing decomposition**: Observability metrics in `RealtimeStats` explicitly decompose elapsed wall time:
+  $$\text{wall\_time} = \text{compute\_time} + \text{sleep\_time}$$
+  distinguishing numerical solver execution time (`compute_time`) from pacing delay (`sleep_time`). Per-step timings (`last_compute_time`, `last_sleep_time`) are also tracked.
+- **Overrun handling & logging**: If step compute time exceeds the target step deadline, an overrun is recorded, dropped deadlines increment, and if `log_overruns=True`, a warning is emitted via the standard `logging` module.
+- **Explicit stop reasons**: When the runner halts or pauses, `stats.stop_reason` (`StopReason` enum) explicitly records the cause:
+  - `COMPLETED`: Simulation reached target `t_final`.
+  - `PAUSED`: Simulation paused by caller.
+  - `MAX_OVERRUNS`: Exceeded configured consecutive overrun limit (`max_overruns`).
+  - `NON_FINITE_STATE`: Divergence or NaN/Inf state encountered.
+  - `RUNTIME_ERROR`: Exception during derivative or step evaluation.
+  - `STOPPED`: Explicitly halted via `runner.stop()`.
+- **Failure propagation policy**: Configurable via `propagate_errors: bool`. When `False` (default), runtime failures are captured gracefully in `RealtimeStats` with `running=False` and descriptive `stop_message`. When `True`, runtime failures raise exceptions directly to the caller.
+
 ## Key limitations
 
 1. **Flat Earth** — no Earth curvature or rotation

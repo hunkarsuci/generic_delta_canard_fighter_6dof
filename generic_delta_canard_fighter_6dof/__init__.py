@@ -107,6 +107,7 @@ from generic_delta_canard_fighter_6dof.realtime import (
     RealtimeConfig,
     RealtimeRunner,
     RealtimeStats,
+    StopReason,
 )
 from generic_delta_canard_fighter_6dof.simulation import (
     SimulationResult,
@@ -193,6 +194,7 @@ __all__ = [
     "SimulationResult",
     "StabilityAnalysis",
     "StateIndex",
+    "StopReason",
     "TrimMapPoint",
     "TrimResult",
     "aerodynamic_forces_moments",
