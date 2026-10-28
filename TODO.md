@@ -12,7 +12,7 @@ file moves so changes remain easy to review.
 
 ## 1. Fix behavior and misleading documentation
 
-- [ ] **Resolve the inactive canard control.** `aerodynamics.py` never reads
+- [x] **Resolve the inactive canard control.** `aerodynamics.py` never reads
   `DELTA_CANARD`, although `allocation.py` commands it and `actuators.py` models
   it. Add configurable, explicitly synthetic canard derivatives and tests for
   their force/moment effects, or clearly document the channel as unsupported.
