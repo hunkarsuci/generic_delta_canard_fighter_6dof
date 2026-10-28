@@ -55,6 +55,7 @@ def simulate(
     t_final: float,
     *,
     integrator: str = "rk4",
+    post_step: Callable[[np.ndarray], np.ndarray] | None = None,
 ) -> SimulationResult:
     """Run a fixed-step simulation from t=0 to t_final.
 
@@ -69,7 +70,9 @@ def simulate(
     t_final:
         Final simulation time [s]. Must be >= 0.
     integrator:
-        Integration method: ``"rk4"`` or ``"euler"``.
+        Integration method: ``"rk4"``, ``"euler"``, ``"rk4_quat"``, or ``"euler_quat"``.
+    post_step:
+        Optional callback applied to the state after each step (e.g. normalization).
 
     Returns
     -------
@@ -90,11 +93,35 @@ def simulate(
     _validate_state_vector(x0)
 
     if integrator == "rk4":
-        step_fn: IntegratorFn = rk4_step
+        step_fn = (
+            rk4_step
+            if post_step is None
+            else (lambda fn, t, x, s_dt: rk4_step(fn, t, x, s_dt, post_step=post_step))
+        )
     elif integrator == "euler":
-        step_fn = euler_step
+        step_fn = (
+            euler_step
+            if post_step is None
+            else (
+                lambda fn, t, x, s_dt: euler_step(fn, t, x, s_dt, post_step=post_step)
+            )
+        )
+    elif integrator == "rk4_quat":
+        from generic_delta_canard_fighter_6dof.quat_state import normalize_quat_state
+
+        actual_post = post_step if post_step is not None else normalize_quat_state
+        step_fn = lambda fn, t, x, s_dt: rk4_step(fn, t, x, s_dt, post_step=actual_post)
+    elif integrator == "euler_quat":
+        from generic_delta_canard_fighter_6dof.quat_state import normalize_quat_state
+
+        actual_post = post_step if post_step is not None else normalize_quat_state
+        step_fn = lambda fn, t, x, s_dt: euler_step(
+            fn, t, x, s_dt, post_step=actual_post
+        )
     else:
-        raise ValueError(f"Unknown integrator: '{integrator}'. Use 'rk4' or 'euler'.")
+        raise ValueError(
+            f"Unknown integrator: '{integrator}'. Use 'rk4', 'euler', 'rk4_quat', or 'euler_quat'."
+        )
 
     n_steps = 0 if t_final == 0.0 else int(np.ceil(t_final / dt))
 

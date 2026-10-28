@@ -7,9 +7,7 @@ from collections.abc import Callable
 import numpy as np
 
 DerivativeFunction = Callable[[float, np.ndarray], np.ndarray]
-
-# Quaternion slice for post-step normalization: indices [Q0, Q1, Q2, Q3]
-_QUAT_SLICE = slice(6, 10)
+PostStepHook = Callable[[np.ndarray], np.ndarray]
 
 
 def _validate_step_size(dt: float) -> None:
@@ -18,32 +16,41 @@ def _validate_step_size(dt: float) -> None:
         raise ValueError("Integration step dt must be finite and positive.")
 
 
-def _normalize_quaternion_in_state(x: np.ndarray) -> np.ndarray:
-    """Normalize the quaternion portion of a 13-state vector in place.
-
-    The quaternion is assumed to occupy indices 6–9 (Q0, Q1, Q2, Q3).
-    If the state length is not 13, this is a no-op (Euler-state vector).
-    """
-    if len(x) == 13:
-        q = x[_QUAT_SLICE]
-        norm = np.linalg.norm(q)
-        if norm > 0.0:
-            x[_QUAT_SLICE] = q / norm
-    return x
-
-
 def euler_step(
     derivative_function: DerivativeFunction,
     t: float,
     x: np.ndarray,
     dt: float,
+    *,
+    post_step: PostStepHook | None = None,
 ) -> np.ndarray:
-    """Advance ``x`` by one explicit Euler step."""
+    """Advance ``x`` by one explicit Euler step.
+
+    Parameters
+    ----------
+    derivative_function:
+        Function returning dx/dt given t and x.
+    t:
+        Current time [s].
+    x:
+        Current state vector.
+    dt:
+        Integration timestep [s]. Must be finite and positive.
+    post_step:
+        Optional callback applied to the state after the step (e.g. normalization).
+
+    Returns
+    -------
+    np.ndarray
+        Next state vector x(t + dt).
+    """
     _validate_step_size(dt)
     state = np.asarray(x, dtype=float)
     derivative = np.asarray(derivative_function(t, state), dtype=float)
     result = state + dt * derivative
-    return _normalize_quaternion_in_state(result)
+    if post_step is not None:
+        result = post_step(result)
+    return result
 
 
 def rk4_step(
@@ -51,8 +58,29 @@ def rk4_step(
     t: float,
     x: np.ndarray,
     dt: float,
+    *,
+    post_step: PostStepHook | None = None,
 ) -> np.ndarray:
-    """Advance ``x`` by one classical fourth-order Runge--Kutta step."""
+    """Advance ``x`` by one classical fourth-order Runge--Kutta step.
+
+    Parameters
+    ----------
+    derivative_function:
+        Function returning dx/dt given t and x.
+    t:
+        Current time [s].
+    x:
+        Current state vector.
+    dt:
+        Integration timestep [s]. Must be finite and positive.
+    post_step:
+        Optional callback applied to the state after the step (e.g. normalization).
+
+    Returns
+    -------
+    np.ndarray
+        Next state vector x(t + dt).
+    """
     _validate_step_size(dt)
     state = np.asarray(x, dtype=float)
 
@@ -68,4 +96,30 @@ def rk4_step(
     k4 = np.asarray(derivative_function(t + dt, state + dt * k3), dtype=float)
 
     result = state + (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
-    return _normalize_quaternion_in_state(result)
+    if post_step is not None:
+        result = post_step(result)
+    return result
+
+
+def euler_step_quat(
+    derivative_function: DerivativeFunction,
+    t: float,
+    x: np.ndarray,
+    dt: float,
+) -> np.ndarray:
+    """Advance a 13-state aircraft quaternion vector with Euler and quaternion normalization."""
+    from generic_delta_canard_fighter_6dof.quat_state import normalize_quat_state
+
+    return euler_step(derivative_function, t, x, dt, post_step=normalize_quat_state)
+
+
+def rk4_step_quat(
+    derivative_function: DerivativeFunction,
+    t: float,
+    x: np.ndarray,
+    dt: float,
+) -> np.ndarray:
+    """Advance a 13-state aircraft quaternion vector with RK4 and quaternion normalization."""
+    from generic_delta_canard_fighter_6dof.quat_state import normalize_quat_state
+
+    return rk4_step(derivative_function, t, x, dt, post_step=normalize_quat_state)

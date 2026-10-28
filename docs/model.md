@@ -46,11 +46,23 @@ Current models:
 
 Each model is independent; they can be combined via `propulsion.combined_forces_moments`.
 
+### Quaternion state representation and integration contract
+
+In addition to the wind-axis Euler-angle formulation (12 states), the repository supports a 13-state body-axis quaternion formulation:
+$$x_{quat} = [u, v, w, p, q, r, q_0, q_1, q_2, q_3, x_N, y_E, z_D]^T$$
+where indices 6–9 contain the unit quaternion attitude ($q_0$ scalar real part, $q_1, q_2, q_3$ vector imaginary parts).
+
+To maintain ODE solver generality:
+- The base integrators (`euler_step`, `rk4_step`) in `integrators.py` are strictly generic and do not perform implicit normalization based on array length.
+- Integrators accept an optional `post_step: PostStepHook | None` callback.
+- Dedicated quaternion integration helpers (`rk4_step_quat`, `euler_step_quat`) and `normalize_quat_state` (in `quat_state.py`) enforce the unit-norm constraint explicitly after each integration step.
+- The `simulate()` interface accepts `integrator="rk4_quat"`, `integrator="euler_quat"`, or an explicit `post_step` hook.
+
 ## Key limitations
 
 1. **Flat Earth** — no Earth curvature or rotation
 2. **Wind-axis state** — VT→0 singularity (aircraft must maintain positive airspeed)
-3. **Euler angles** — singularity at theta = ±90°
+3. **Euler angles** — singularity at theta = ±90° (quaternion representation avoids this singularity)
 4. **No wind/gust model** — atmosphere is stationary
 5. **No structural flexibility** — rigid body only
 6. **Generic aerodynamic coefficients** — not representative of any real aircraft

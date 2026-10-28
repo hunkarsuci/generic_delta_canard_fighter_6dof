@@ -7,7 +7,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from generic_delta_canard_fighter_6dof.integrators import euler_step, rk4_step
+from generic_delta_canard_fighter_6dof.integrators import (
+    euler_step,
+    euler_step_quat,
+    rk4_step,
+    rk4_step_quat,
+)
+from generic_delta_canard_fighter_6dof.quat_state import normalize_quat_state
 
 
 def test_euler_step_constant_derivative() -> None:
@@ -241,3 +247,95 @@ def test_euler_rejects_nonfinite_dt() -> None:
 
     with pytest.raises(ValueError):
         euler_step(derivative, 0.0, np.array([1.0]), dt=-0.01)
+
+
+def test_generic_13_state_system_unmodified_by_generic_integrators() -> None:
+    """Generic 13-element systems must NOT have indices 6..9 normalized by default."""
+    # Arbitrary 13-state vector where indices 6..9 do not form a unit quaternion
+    x0 = np.array(
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0],
+        dtype=float,
+    )
+
+    def zero_deriv(t: float, x: np.ndarray) -> np.ndarray:
+        return np.zeros_like(x)
+
+    # With zero derivative, generic step should return exactly x0
+    x_euler = euler_step(zero_deriv, 0.0, x0, 0.1)
+    np.testing.assert_array_equal(x_euler, x0)
+
+    x_rk4 = rk4_step(zero_deriv, 0.0, x0, 0.1)
+    np.testing.assert_array_equal(x_rk4, x0)
+
+
+def test_custom_post_step_callback() -> None:
+    """Passing a custom post_step hook executes on the integrated state."""
+
+    def deriv(t: float, x: np.ndarray) -> np.ndarray:
+        return np.ones_like(x)
+
+    x0 = np.array([1.0, 2.0])
+    # Hook that clamps states to a maximum of 1.05
+    hook = lambda s: np.clip(s, 0.0, 1.05)
+
+    x_res = euler_step(deriv, 0.0, x0, 0.1, post_step=hook)
+    np.testing.assert_allclose(x_res, [1.05, 1.05])
+
+    x_res_rk4 = rk4_step(deriv, 0.0, x0, 0.1, post_step=hook)
+    np.testing.assert_allclose(x_res_rk4, [1.05, 1.05])
+
+
+def test_normalize_quat_state_valid() -> None:
+    """normalize_quat_state normalizes indices 6..9 to unit length and preserves other states."""
+    x = np.arange(13, dtype=float)
+    # Set non-unit quaternion at 6..9: [2, 0, 0, 0]
+    x[6:10] = [2.0, 0.0, 0.0, 0.0]
+
+    normalized = normalize_quat_state(x)
+    assert normalized is not x  # returns new array
+    np.testing.assert_allclose(normalized[6:10], [1.0, 0.0, 0.0, 0.0])
+    # Other states are preserved
+    np.testing.assert_allclose(normalized[:6], x[:6])
+    np.testing.assert_allclose(normalized[10:], x[10:])
+
+
+@pytest.mark.parametrize(
+    "invalid_input,expected_err",
+    [
+        (np.ones(12), r"must have shape \(13,\)"),
+        (np.ones(14), r"must have shape \(13,\)"),
+        (np.zeros(13), "Quaternion norm must be finite and strictly positive"),
+        (
+            np.array([0.0] * 6 + [np.nan, 0.0, 0.0, 0.0] + [0.0] * 3),
+            "Quaternion state contains non-finite values",
+        ),
+        (
+            np.array([0.0] * 6 + [np.inf, 0.0, 0.0, 0.0] + [0.0] * 3),
+            "Quaternion state contains non-finite values",
+        ),
+    ],
+)
+def test_normalize_quat_state_invalid_inputs(
+    invalid_input: np.ndarray, expected_err: str
+) -> None:
+    with pytest.raises(ValueError, match=expected_err):
+        normalize_quat_state(invalid_input)
+
+
+def test_rk4_step_quat_and_euler_step_quat() -> None:
+    """Explicit quaternion step helpers normalize the quaternion post-step."""
+
+    def zero_deriv(t: float, x: np.ndarray) -> np.ndarray:
+        return np.zeros_like(x)
+
+    # Initial state with unnormalized quaternion
+    x0 = np.zeros(13, dtype=float)
+    x0[6:10] = [3.0, 0.0, 4.0, 0.0]  # norm is 5.0
+
+    x_rk4 = rk4_step_quat(zero_deriv, 0.0, x0, 0.01)
+    assert np.linalg.norm(x_rk4[6:10]) == pytest.approx(1.0, abs=1e-14)
+    np.testing.assert_allclose(x_rk4[6:10], [0.6, 0.0, 0.8, 0.0])
+
+    x_euler = euler_step_quat(zero_deriv, 0.0, x0, 0.01)
+    assert np.linalg.norm(x_euler[6:10]) == pytest.approx(1.0, abs=1e-14)
+    np.testing.assert_allclose(x_euler[6:10], [0.6, 0.0, 0.8, 0.0])
