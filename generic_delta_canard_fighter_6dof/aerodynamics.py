@@ -52,6 +52,9 @@ class AeroCoefficients:
     CL_de: float = 0.4
     """Lift increment per symmetric elevon deflection per radian [-]."""
 
+    CL_dc: float = 0.2
+    """Lift increment per canard deflection per radian [-]. Synthetic educational placeholder."""
+
     CD0: float = 0.022
     """Zero-lift drag coefficient [-]."""
 
@@ -66,6 +69,12 @@ class AeroCoefficients:
 
     Cm_de: float = -1.2
     """Pitch control derivative per radian [-]."""
+
+    Cm_dc: float = 0.6
+    """Pitch control derivative per radian canard deflection [-].
+    Synthetic educational placeholder. Positive canard deflection (trailing-edge down)
+    produces upward lift forward of the CG, resulting in a positive (nose-up) pitching moment.
+    """
 
     # ── lateral-directional ──
     CY_beta: float = -1.0
@@ -155,14 +164,15 @@ def aerodynamic_forces_moments(
     c = geometry.mean_aerodynamic_chord_m
 
     # Control mixing
+    dc = float(control[ControlIndex.DELTA_CANARD])
     de = _symmetric_elevon(control, ControlIndex)
     da = _differential_elevon(control, ControlIndex)
     dr = control[ControlIndex.DELTA_RUDDER]
 
     # ── longitudinal coefficients ──
-    CL = coeffs.CL0 + coeffs.CL_alpha * alpha + coeffs.CL_de * de
+    CL = coeffs.CL0 + coeffs.CL_alpha * alpha + coeffs.CL_de * de + coeffs.CL_dc * dc
     CD = coeffs.CD0 + coeffs.K * CL * CL
-    Cm = coeffs.Cm0 + coeffs.Cm_alpha * alpha + coeffs.Cm_de * de
+    Cm = coeffs.Cm0 + coeffs.Cm_alpha * alpha + coeffs.Cm_de * de + coeffs.Cm_dc * dc
 
     # ── lateral-directional coefficients ──
     CY = coeffs.CY_beta * beta

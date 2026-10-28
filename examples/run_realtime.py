@@ -84,9 +84,7 @@ class AnimatedTelemetry:
         (self.line_q,) = self.ax_rate.plot(
             [], [], "r-", linewidth=1.0, label="q (pitch)"
         )
-        (self.line_r,) = self.ax_rate.plot(
-            [], [], "g-", linewidth=1.0, label="r (yaw)"
-        )
+        (self.line_r,) = self.ax_rate.plot([], [], "g-", linewidth=1.0, label="r (yaw)")
         self.ax_rate.set_ylabel("Angular Rate [deg/s]")
         self.ax_rate.set_xlabel("Time [s]")
         self.ax_rate.legend(loc="upper right", fontsize=8)
@@ -264,10 +262,7 @@ def main(argv: list[str] | None = None) -> int:
 
     mode = "deterministic (fake clock)" if args.deterministic else "soft real-time"
     anim_note = " with live animation" if args.animate else ""
-    print(
-        f"Starting {mode}{anim_note},"
-        f" duration={args.duration}s, dt={cfg.dt}s\n"
-    )
+    print(f"Starting {mode}{anim_note}, duration={args.duration}s, dt={cfg.dt}s\n")
 
     t0 = time.perf_counter()
     stats = runner.run(args.duration)

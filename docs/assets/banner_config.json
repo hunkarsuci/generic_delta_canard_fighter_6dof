@@ -1,0 +1,10 @@
+{
+  "altitude_m": 5000.0,
+  "airspeed_mps": 200.0,
+  "initial_bank_deg": 18.0,
+  "duration_s": 6.0,
+  "integration_dt_s": 0.01,
+  "fps": 20,
+  "geometry": {},
+  "aero_coefficients": {}
+}

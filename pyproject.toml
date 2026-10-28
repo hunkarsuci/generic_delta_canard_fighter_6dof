@@ -11,6 +11,22 @@ requires-python = ">=3.10"
 authors = [
     { name = "Hunkar Suci" }
 ]
+maintainers = [
+    { name = "Hunkar Suci" }
+]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
     "numpy",
     "scipy",
@@ -24,6 +40,14 @@ dev = [
     "pytest-cov",
     "ruff",
 ]
+
+[project.urls]
+Homepage = "https://github.com/hunkarsuci/generic_delta_canard_fighter_6dof"
+Repository = "https://github.com/hunkarsuci/generic_delta_canard_fighter_6dof"
+Issues = "https://github.com/hunkarsuci/generic_delta_canard_fighter_6dof/issues"
+
+[tool.setuptools.packages.find]
+include = ["generic_delta_canard_fighter_6dof*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -15,11 +15,13 @@ flight dynamics study.
 | CL0 | 0.12 | Placeholder | — | Zero-alpha lift coefficient |
 | CL_alpha | 5.0 /rad | Placeholder | alpha | Lift-curve slope |
 | CL_de | 0.4 /rad | Placeholder | symmetric elevon | Control derivative |
+| CL_dc | 0.2 /rad | Synthetic placeholder | canard (delta_canard) | Lift increment per canard deflection (synthetic, unvalidated) |
 | CD0 | 0.022 | Placeholder | — | Zero-lift drag |
 | K | 0.08 | Placeholder | CL² | Induced drag factor |
 | Cm0 | 0.01 | Placeholder | — | Zero-alpha pitching moment |
 | Cm_alpha | -0.55 /rad | Placeholder | alpha | Pitch stiffness (negative for stability) |
-| Cm_de | -1.2 /rad | Placeholder | symmetric elevon | Pitch control power |
+| Cm_de | -1.2 /rad | Placeholder | symmetric elevon | Pitch control power (aft surface, negative = nose-down) |
+| Cm_dc | 0.6 /rad | Synthetic placeholder | canard (delta_canard) | Pitch control power (forward surface, positive = nose-up; synthetic, unvalidated) |
 
 ### Lateral-directional
 
@@ -52,11 +54,15 @@ flight dynamics study.
 6. **No high-alpha modeling** — valid only for small to moderate alpha
 7. **Linear control derivatives** — no saturation or nonlinear mixing
 8. **Symmetric aircraft** — lateral coefficients assume symmetry
+9. **Synthetic placeholder parameters** — all canard, wing, and tail coefficients are explicitly synthetic and unvalidated
 
 ## Control mixing
 
-- Symmetric elevon: `de = (delta_elevon_left + delta_elevon_right) / 2`
+- Canard deflection: `dc = delta_canard` (+trailing edge down produces positive lift and nose-up pitch moment)
+- Symmetric elevon: `de = (delta_elevon_left + delta_elevon_right) / 2` (+trailing edge down produces positive lift and nose-down pitch moment)
 - Differential elevon: `da = (delta_elevon_right - delta_elevon_left) / 2`
+
+Because the canard is located forward of the center of gravity, a positive canard deflection (trailing-edge down) creates upward lift that produces a positive (nose-up) pitching moment (`Cm_dc > 0`). In contrast, the aft-mounted elevons create upward lift aft of the center of gravity, resulting in a negative (nose-down) pitching moment (`Cm_de < 0`). Both canard derivatives are explicitly synthetic placeholders.
 
 ## Extrapolation behavior
 
