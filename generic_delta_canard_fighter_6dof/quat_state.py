@@ -100,6 +100,38 @@ def _validate_quat_state(x: np.ndarray) -> None:
         raise ValueError("Quaternion state contains non-finite values.")
 
 
+def normalize_quat_state(x: np.ndarray) -> np.ndarray:
+    """Normalize the quaternion slice [q0, q1, q2, q3] in a 13-state aircraft vector.
+
+    Parameters
+    ----------
+    x:
+        13-element aircraft quaternion state vector.
+
+    Returns
+    -------
+    np.ndarray
+        New state vector with normalized attitude quaternion.
+
+    Raises
+    ------
+    ValueError
+        If x does not have shape (13,), contains non-finite values,
+        or if the quaternion has zero norm.
+    """
+    x = np.asarray(x, dtype=float)
+    _validate_quat_state(x)
+
+    q = x[QuatStateIndex.Q0 : QuatStateIndex.Q3 + 1]
+    norm = np.linalg.norm(q)
+    if not np.isfinite(norm) or norm <= 0.0:
+        raise ValueError("Quaternion norm must be finite and strictly positive.")
+
+    x_norm = x.copy()
+    x_norm[QuatStateIndex.Q0 : QuatStateIndex.Q3 + 1] = q / norm
+    return x_norm
+
+
 def quat_state_to_dict(x: np.ndarray) -> dict[str, float]:
     """Convert a quaternion state vector to a readable dictionary."""
     _validate_quat_state(x)

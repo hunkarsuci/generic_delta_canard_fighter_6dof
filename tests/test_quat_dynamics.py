@@ -30,6 +30,7 @@ from generic_delta_canard_fighter_6dof.equations import (
 from generic_delta_canard_fighter_6dof.geometry import create_default_geometry
 from generic_delta_canard_fighter_6dof.integrators import (
     rk4_step,
+    rk4_step_quat,
 )
 from generic_delta_canard_fighter_6dof.quat_state import (
     NUM_QUAT_STATES,
@@ -266,7 +267,7 @@ def test_quat_rk4_norm_preservation():
         return aircraft_dynamics_quat(t, x, ctrl, geo)
 
     dt = 0.01
-    x1 = rk4_step(deriv, 0.0, x0, dt)
+    x1 = rk4_step_quat(deriv, 0.0, x0, dt)
 
     q = x1[QuatStateIndex.Q0 : QuatStateIndex.Q3 + 1]
     norm = np.linalg.norm(q)
@@ -294,7 +295,7 @@ def test_quat_rk4_norm_preservation_many_steps():
     x = x0.copy()
     dt = 0.01
     for step in range(1000):
-        x = rk4_step(deriv, step * dt, x, dt)
+        x = rk4_step_quat(deriv, step * dt, x, dt)
         q = x[QuatStateIndex.Q0 : QuatStateIndex.Q3 + 1]
         assert np.linalg.norm(q) == pytest.approx(1.0, abs=1e-14)
 
@@ -341,7 +342,7 @@ def test_quat_dynamics_90_degree_yaw_integration():
     x = x0.copy()
     t = 0.0
     for _ in range(1000):
-        x = rk4_step(deriv, t, x, dt)
+        x = rk4_step_quat(deriv, t, x, dt)
         t += dt
 
     # After 1 second of r = π/2, body x-axis should point east in NED
@@ -398,7 +399,7 @@ def test_euler_vs_quat_trajectory_agreement():
     for step in range(n_steps):
         t = step * dt
         x_e = rk4_step(deriv_euler, t, x_e, dt)
-        x_q = rk4_step(deriv_quat, t, x_q, dt)
+        x_q = rk4_step_quat(deriv_quat, t, x_q, dt)
 
     # Convert quat result back to Euler for comparison
     x_e_from_q = quat_state_to_euler_state(x_q)
@@ -463,7 +464,7 @@ def test_quat_dynamics_through_pitch_90():
 
     # Integrate until pitch passes through 90° region
     for _ in range(2000):
-        x = rk4_step(
+        x = rk4_step_quat(
             lambda t_, x_: aircraft_dynamics_quat(
                 t_, x_, ctrl, geo, pitch_moment_model
             ),
@@ -519,7 +520,7 @@ def test_euler_vs_quat_position_trajectory():
     for step in range(200):
         t = step * dt
         x_e = rk4_step(deriv_euler, t, x_e, dt)
-        x_q = rk4_step(deriv_quat, t, x_q, dt)
+        x_q = rk4_step_quat(deriv_quat, t, x_q, dt)
 
     # Compare position states (indices 9,10,11 in Euler, 10,11,12 in quat)
     x_e_from_q = quat_state_to_euler_state(x_q)
@@ -559,7 +560,7 @@ def test_quat_rk4_convergence():
     x_ref = x0.copy()
     t = 0.0
     for _ in range(int(t_final / dt_ref)):
-        x_ref = rk4_step(deriv, t, x_ref, dt_ref)
+        x_ref = rk4_step_quat(deriv, t, x_ref, dt_ref)
         t += dt_ref
 
     errors = []
@@ -568,7 +569,7 @@ def test_quat_rk4_convergence():
         x = x0.copy()
         t = 0.0
         for _ in range(int(t_final / dt)):
-            x = rk4_step(deriv, t, x, dt)
+            x = rk4_step_quat(deriv, t, x, dt)
             t += dt
         err = np.linalg.norm(x - x_ref)
         errors.append(err)

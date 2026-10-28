@@ -22,10 +22,11 @@ file moves so changes remain easy to review.
   final-step policy and apply it consistently to `realtime.py` and
   `examples/compare_controllers.py`, which currently use different rounding.
   Test zero duration, durations shorter than one step, and non-divisible times.
-- [ ] **Make quaternion normalization explicit.** `integrators.py` normalizes
-  indices 6–9 whenever a state has length 13. A generic 13-variable system with
-  zero derivatives therefore changes unexpectedly. Use an explicit option,
-  post-step callback, or aircraft-specific wrapper; preserve quaternion tests.
+- [x] **Make quaternion normalization explicit.** `integrators.py` previously
+  normalized indices 6–9 whenever a state had length 13. Generic integrators
+  are now strictly generic with an optional `post_step` hook, and explicit
+  helpers (`rk4_step_quat`, `euler_step_quat`, `normalize_quat_state`) enforce
+  unit-norm constraints on 13-state quaternion formulations.
 - [ ] **Strengthen configuration validation.** `PropulsionConfig` currently
   accepts negative thrust and NaN thrust axes. Validate finite values, physical
   bounds, vector shapes, and timing settings across `propulsion.py`,

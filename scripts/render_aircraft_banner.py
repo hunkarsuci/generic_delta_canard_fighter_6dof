@@ -26,7 +26,7 @@ from generic_delta_canard_fighter_6dof.geometry import (
     AircraftGeometry,
     create_default_geometry,
 )
-from generic_delta_canard_fighter_6dof.integrators import rk4_step
+from generic_delta_canard_fighter_6dof.integrators import rk4_step_quat
 from generic_delta_canard_fighter_6dof.linearization import linearize
 from generic_delta_canard_fighter_6dof.propulsion import combined_forces_moments
 from generic_delta_canard_fighter_6dof.quat_state import QuatStateIndex as QI
@@ -129,7 +129,7 @@ def simulate_flight(config: BannerConfig) -> FlightTrace:
         controller.x_trim = reference
         command = controller.step(quat_state_to_euler_state(state))
         achieved = actuators.step(command, dt)
-        state = rk4_step(
+        state = rk4_step_quat(
             lambda t, x, achieved=achieved: aircraft_dynamics_quat(
                 t, x, achieved, geometry, model
             ),

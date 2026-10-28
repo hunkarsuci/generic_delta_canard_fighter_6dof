@@ -62,7 +62,9 @@ from generic_delta_canard_fighter_6dof.geometry import (
 )
 from generic_delta_canard_fighter_6dof.integrators import (
     euler_step,
+    euler_step_quat,
     rk4_step,
+    rk4_step_quat,
 )
 from generic_delta_canard_fighter_6dof.kinematics import (
     altitude_rate_from_down_velocity,
@@ -86,6 +88,7 @@ from generic_delta_canard_fighter_6dof.quat_state import (
     QuatStateIndex,
     euler_state_to_quat_state,
     make_quat_state,
+    normalize_quat_state,
     quat_state_to_dict,
     quat_state_to_euler_state,
 )
@@ -216,6 +219,7 @@ __all__ = [
     "euler_rates",
     "euler_state_to_quat_state",
     "euler_step",
+    "euler_step_quat",
     "euler_to_quaternion",
     "flight_condition",
     "ft_to_m",
@@ -233,6 +237,7 @@ __all__ = [
     "make_state",
     "mps_to_kt",
     "ned_to_body_dcm",
+    "normalize_quat_state",
     "normalize_quaternion",
     "propulsion_forces_moments",
     "quat_state_to_dict",
@@ -244,6 +249,7 @@ __all__ = [
     "quaternion_to_euler",
     "rad_to_deg",
     "rk4_step",
+    "rk4_step_quat",
     "rotational_acceleration_body",
     "simulate",
     "speed_of_sound",
